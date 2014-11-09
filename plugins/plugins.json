@@ -11,7 +11,7 @@
 			"showtimeVersion": "4.1.215", 
 			"type": "javascript",
 			"id": "4tube", 
-			"icon": "https://github.com/lprot/showtime-plugins/raw/master/4tube/4tube.png",
+			"icon": "https://github.com/druelie/showtime-plugins/raw/master/4tube/4tube.png",
 			"category": "video",
 			"downloadURL": "https://github.com/druelie/showtime-plugins/raw/master/plugins/4tube.zip"
 		},
