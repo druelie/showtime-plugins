@@ -19,7 +19,7 @@
 
 (function(plugin) {
     var BASE_URL = "http://www.4tube.com";
-    var HD_URL = BASE_URL + "/videos?sort=date&quality=hd";
+    var HD_URL = BASE_URL + "/videos?quality=hd";
     var logo = plugin.path + "4tube.png";
 
     function setPageHeader(page, title) {
@@ -183,8 +183,8 @@
         var tryToSearch = true;
 
         function scraper(doc) {
-            //                                        1-link                      2-title                               3-icon                                    4-length                                        5-views
-            var re = />Watch Later<\/button><a href="([\S\s]*?)" [\S\s]*? title="([\S\s]*?)" [\S\s]*?<img data-master="([\S\s]*?)" [\S\s]*?"icon icon-timer"></i>([\S\s]*?)</li><li><i class="icon icon-eye"></i>([\S\s]*?)</;
+            // 1-link, 2-title, 3-icon, 4-length, 5-views, 6-rating
+            var re = /<span class="videothumb"[\S\s]*?href="([\S\s]*?)" title="([\S\s]*?)"><img src="([\S\s]*?)"[\S\s]*?<span class="length">Length: ([^\<]+)<[\S\s]*?<span class="views">Views: ([^\<]+)<[\S\s]*?<span class="rating" style="width:([^\%]+)\%/g;
             var match = re.exec(doc);
             while (match) {
                 page.appendItem(plugin.getDescriptor().id + ":play:" + escape(match[1]) + ":" + escape(match[2]), "video", {
@@ -193,7 +193,7 @@
                     description: new showtime.RichText(coloredStr('Views: ', orange) + match[5]),
                     genre: 'Adult',
                     duration: match[4],
-                    // rating: match[6] * 10
+                    rating: match[6] * 10
                 });
                 page.entries++;
                 match = re.exec(doc);
@@ -205,11 +205,18 @@
             page.loading = true;
             var doc = showtime.httpReq(checkLink(url)).toString();
             page.loading = false;
-            page.appendItem("", "separator", {
-                title: 'Latest HD Videos'
-            });
-            scraper(doc.match(/"video_list"([\S\s]*?)"pagination"/)[1]);
-            var next = doc.match(/<li><a href="([\S\s]*?)" id="next" /);
+            var mp = doc.match(/<h2>Most Popular Videos<\/h2>([\S\s]*?)<span class="seperator_rt">/);
+            if (mp) {
+                page.appendItem("", "separator", {
+                    title: 'Most Popular Videos'
+                });
+                scraper(mp[1]);
+                page.appendItem("", "separator", {
+                    title: 'Videos (' + doc.match(/<span class="seperator_rt">[\S\s]*?of <strong>([\S\s]*?)<\/strong>/)[1] + ')'
+                });
+            }
+            scraper(doc.match(/<span class="seperator_rt">([\S\s]*?)<\/html>/)[1]);
+            var next = doc.match(/<a class="next" href="([\S\s]*?)">Next<\/a>/);
             if (!next) return tryToSearch = false;
             url = next[1];
             return true;
@@ -236,7 +243,7 @@
         page.appendItem(plugin.getDescriptor().id + ':pornstars', 'directory', {
             title: 'Pornstars'
         });
-        index(page, HD_URL);
+        index(page, BASE_URL);
     });
 
     plugin.addSearcher(plugin.getDescriptor().id, logo, function(page, query) {
