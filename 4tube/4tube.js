@@ -189,7 +189,7 @@
             while (match) {
                 page.appendItem(plugin.getDescriptor().id + ":play:" + escape(match[1]) + ":" + escape(match[2]), "video", {
                     title: new showtime.RichText(match[2] + colorStr(match[4], orange)),
-                    icon: match[3],
+                    icon: match[3].replace("240x180","835x470"), // bigger icon
                     description: new showtime.RichText(coloredStr('Views: ', orange) + match[5]),
                     genre: 'Adult',
                     duration: match[4]
@@ -206,7 +206,7 @@
             var doc = showtime.httpReq(checkLink(url)).toString();
             page.loading = false;
             page.appendItem("", "separator", {
-                title: 'Latest HD Videos'
+                title: 'Latest HD Videos - Page ' + doc.match(/currentPage = '(.*?)';/)[1])
             });
             scraper(doc.match(/"video_list"([\S\s]*?)"pagination"/)[1]);
             var next = doc.match(/<li><a href="(.*?)" id="next" /);
@@ -221,21 +221,21 @@
     // Start page
     plugin.addURI(plugin.getDescriptor().id + ":start", function(page) {
         setPageHeader(page, "4tube - Home");
-        page.appendItem(plugin.getDescriptor().id + ':movies:/view/basic/mostrecent/:Newest', 'directory', {
-            title: 'Newest'
-        });
-        page.appendItem(plugin.getDescriptor().id + ':movies:/view/basic/toprated/:Highest Rated', 'directory', {
-            title: 'Highest Rated'
-        });
-        page.appendItem(plugin.getDescriptor().id + ':movies:/view/basic/mostviewed/:Most Viewed', 'directory', {
-            title: 'Most Viewed'
-        });
-        page.appendItem(plugin.getDescriptor().id + ':categories', 'directory', {
-            title: 'Categories'
-        });
-        page.appendItem(plugin.getDescriptor().id + ':pornstars', 'directory', {
-            title: 'Pornstars'
-        });
+ //       page.appendItem(plugin.getDescriptor().id + ':movies:/view/basic/mostrecent/:Newest', 'directory', {
+ //           title: 'Newest'
+ //       });
+ //       page.appendItem(plugin.getDescriptor().id + ':movies:/view/basic/toprated/:Highest Rated', 'directory', {
+ //           title: 'Highest Rated'
+ //       });
+ //       page.appendItem(plugin.getDescriptor().id + ':movies:/view/basic/mostviewed/:Most Viewed', 'directory', {
+ //           title: 'Most Viewed'
+ //       });
+ //       page.appendItem(plugin.getDescriptor().id + ':categories', 'directory', {
+ //           title: 'Categories'
+ //       });
+ //       page.appendItem(plugin.getDescriptor().id + ':pornstars', 'directory', {
+ //           title: 'Pornstars'
+ //       });
         index(page, HD_URL);
     });
 
