@@ -192,7 +192,7 @@
                     icon: match[3],
                     description: new showtime.RichText(coloredStr('Views: ', orange) + match[5]),
                     genre: 'Adult',
-                    duration: match[4],
+                    duration: match[4]
                     // rating: match[6] * 10
                 });
                 page.entries++;
