@@ -204,9 +204,10 @@
             if (!tryToSearch) return false;
             page.loading = true;
             var doc = showtime.httpReq(checkLink(url)).toString();
+            var fullTitle = 'Latest HD Videos - Page ' + doc.match(/currentPage = '(.*?)';/)[1];
             page.loading = false;
             page.appendItem("", "separator", {
-                title: 'Latest HD Videos - Page ' + doc.match(/currentPage = '(.*?)';/)[1]
+                title: fullTitle
             });
             scraper(doc.match(/"video_list"([\S\s]*?)"pagination"/)[1]);
             var next = doc.match(/<li><a href="(.*?)" id="next" /);
