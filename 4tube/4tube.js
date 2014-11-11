@@ -209,7 +209,7 @@
                 title: 'Latest HD Videos'
             });
             scraper(doc.match(/"video_list"([\S\s]*?)"pagination"/)[1]);
-            var next = doc.match(/<li><a href="([\S\s]*?)" id="next" /);
+            var next = doc.match(/<li><a href="(.*?)" id="next" /);
             if (!next) return tryToSearch = false;
             url = next[1];
             return true;
