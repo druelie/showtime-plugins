@@ -206,7 +206,7 @@
             var doc = showtime.httpReq(checkLink(url)).toString();
             page.loading = false;
             page.appendItem("", "separator", {
-                title: 'Latest HD Videos - Page ' + doc.match(/currentPage = '(.*?)';/)[1])
+                title: 'Latest HD Videos - Page ' + doc.match(/currentPage = '(.*?)';/)[1]
             });
             scraper(doc.match(/"video_list"([\S\s]*?)"pagination"/)[1]);
             var next = doc.match(/<li><a href="(.*?)" id="next" /);
