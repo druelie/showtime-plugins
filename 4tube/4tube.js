@@ -181,14 +181,14 @@
         page.loading = true;
         var doc = showtime.httpReq(BASE_URL + "/tags").toString();
         page.loading = false;
-        var mp = doc.match(/<ul class="gallery">([\S\s]*?)<\/ul>/)[1];
-	// 1-link, 2-numofvideos, 3-icon, 4-title
-        var re = /<li>[\S\s]*?<a href="([\S\s]*?)">[\S\s]*?<\/i> ([\S\s]*?)<\/span>[\S\s]*?src="([\S\s]*?)" title="([\S\s]*?)"/g;
+        var mp = doc.match(/categories_page([\S\s]*?)footer/)[1];
+	//                            1-link             2-title                              3-numofvideos                          4-icon
+        var re = /"thumb-link" href="([\S\s]*?)" title="([\S\s]*?)">[\S\s]*?icon-video"><\/i>([\S\s]*?)<[\S\s]*?<img data-original="([\S\s]*?)"/g;
         var match = re.exec(mp);
         while (match) {
-            page.appendItem(plugin.getDescriptor().id + ":sorting:" + escape(match[4]) + ":" + escape(match[1]), "video", {
-                title: new showtime.RichText(match[4] + colorStr(match[2], blue)),
-                icon: match[3]
+            page.appendItem(plugin.getDescriptor().id + ":sorting:" + escape(match[2]) + ":" + escape(match[1]), "video", {
+                title: new showtime.RichText(match[2] + colorStr(match[3], blue)),
+                icon: match[4]
             });
             var match = re.exec(mp);
         }
