@@ -93,16 +93,38 @@
     plugin.addURI(plugin.getDescriptor().id + ":play:(.*):(.*)", function(page, url, title) {
         page.loading = true;
         var doc = showtime.httpReq(unescape(url)).toString();
-	page.loading = false;
+        // example: (800375623, 360, [1080,720,480,360,240])
+        var re = /\((\d+), \d+, \[(\d+),/;
+        var matchInfo = re.exec(doc);
+        var mediaID  = matchInfo[1];
+        var bestQual = matchInfo[2];
+        var tempUrl  = 'http://tkn.4tube.com/' + mediaID + '/desktop/' + bestQual;
+        // add httpReq here
+        var doc = showtime.httpReq(tempUrl, {
+			debug: true,
+			method: 'POST',
+			headers: {
+				'Accept': 'application/json, text/javascript, */*; q=0.01',
+				'Origin': 'http://www.4tube.com',
+				'Accept-Charset': null,
+                'Content-Type': null
+			}
+		}).toString();
+		showtime.trace("Videoserver response: "+doc,"AC");
+        var re = /"status":"success","token":"(http[^<>"]*?)"/;
+        var videoUrl = re.exec(doc)[1];
+        showtime.trace("VideoURL: "+videoUrl,"AC");
+        if (videoUrl != null)
+        {
+            videoUrl = videoUrl + "&start=0";
+	    }
+	    page.loading = false;
         page.type = "video";
-        var link = doc.match(/<a id="video-hd" href="([\S\s]*?)"/);
-        if (!link) link = doc.match(/<a id="video-high" href="([\S\s]*?)"/);
-        if (!link) link = doc.match(/<a id="video-standard" href="([\S\s]*?)"/);
         page.source = "videoparams:" + showtime.JSONEncode({
             title: unescape(title),
             canonicalUrl: plugin.getDescriptor().id + ":play:" + url + ":" + title,
             sources: [{
-                url: link[1]
+                url: videoUrl
             }]
         });
     });
@@ -189,7 +211,7 @@
             while (match) {
                 page.appendItem(plugin.getDescriptor().id + ":play:" + escape(match[1]) + ":" + escape(match[2]), "video", {
                     title: new showtime.RichText(match[2] + colorStr(match[4], orange)),
-                    icon: match[3].replace("240x180","835x470"), // bigger icon
+                    icon: match[3],
                     description: new showtime.RichText(coloredStr('Views: ', orange) + match[5]),
                     genre: 'Adult',
                     duration: match[4]
