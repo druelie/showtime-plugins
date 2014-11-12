@@ -253,9 +253,9 @@
  //       page.appendItem(plugin.getDescriptor().id + ':movies:/view/basic/mostviewed/:Most Viewed', 'directory', {
  //           title: 'Most Viewed'
  //       });
- //       page.appendItem(plugin.getDescriptor().id + ':categories', 'directory', {
- //           title: 'Categories'
- //       });
+        page.appendItem(plugin.getDescriptor().id + ':categories', 'directory', {
+            title: 'Categories'
+        });
  //       page.appendItem(plugin.getDescriptor().id + ':pornstars', 'directory', {
  //           title: 'Pornstars'
  //       });
