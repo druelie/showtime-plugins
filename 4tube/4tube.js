@@ -171,7 +171,7 @@
 
     // Main page
     plugin.addURI(plugin.getDescriptor().id + ":movies:(.*)", function(page, sorted) {
-        setPageHeader(page, plugin.getDescriptor().id + ' - Sorted by' + sorted);
+        setPageHeader(page, plugin.getDescriptor().id + ' - Sorted by ' + sorted);
         index(page, '/videos?sort=' + sorted);
     });
 
@@ -201,6 +201,7 @@
     }
 
     function index(page, url) {
+	    url = url + HDOnly;
 	    showtime.trace("Index URL: " + url, "AC");
         page.loading = true;
         page.entries = 0;
@@ -243,10 +244,17 @@
         page.paginator = loader;
     }
 
+	var HDOnly;
     // Start page
     plugin.addURI(plugin.getDescriptor().id + ":start", function(page) {
         setPageHeader(page, plugin.getDescriptor().id + ' - Home');
-        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=popularity:Sorted by popularity', 'directory', {
+		
+		page.options.createBool("hdonly", "Show HD only", false, function(v) {
+            if (v === true) HDOnly = '&quality=hd';
+			else            HDOnly = '';
+        });
+		
+        page.appendItem(plugin.getDescriptor().id + ':movies:popularity', 'directory', {
             title: 'Sorted by popularity'
         });
 //        page.appendItem(plugin.getDescriptor().id + ':movies:date', 'directory', {
