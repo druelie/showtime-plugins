@@ -132,10 +132,10 @@
     // Sorting selected category
     plugin.addURI(plugin.getDescriptor().id + ":sorting:(.*):(.*)", function(page, title, url) {
         setPageHeader(page, '4tube - ' + unescape(title));
-        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url, 'directory', {
-            title: "Sorted by date",
-            icon: logo
-        });
+//        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url, 'directory', {
+//            title: "Sorted by date",
+//            icon: logo
+//        });
         page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + '?sort=duration', 'directory', {
             title: "Sorted by duration",
             icon: logo
@@ -148,6 +148,7 @@
             title: "Sorted by views",
             icon: logo
         });
+        index(page, unescape(url));
     });
 
     // Enter category
@@ -187,7 +188,7 @@
         var match = re.exec(mp);
         while (match) {
             page.appendItem(plugin.getDescriptor().id + ":sorting:" + escape(match[2]) + ":" + escape(match[1]), "video", {
-                title: new showtime.RichText(match[2] + colorStr(match[3], blue)),
+                title: new showtime.RichText(match[2] + colorStr(match[3].replace(',','.'), blue)),
                 icon: match[4]
             });
             var match = re.exec(mp);
@@ -200,6 +201,7 @@
     }
 
     function index(page, url) {
+	    showtime.trace("Index URL: " + url, "AC");
         page.loading = true;
         page.entries = 0;
         var tryToSearch = true;
@@ -244,12 +246,12 @@
     // Start page
     plugin.addURI(plugin.getDescriptor().id + ":start", function(page) {
         setPageHeader(page, "4tube - Home");
-        page.appendItem(plugin.getDescriptor().id + ':movies:/videos:Sorted by Popularity', 'directory', {
-            title: 'Sorted by Popularity'
+        page.appendItem(plugin.getDescriptor().id + ':movies:/videos:Sorted by popularity', 'directory', {
+            title: 'Sorted by popularity'
         });
-        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=date:Sorted by date', 'directory', {
-            title: 'Sorted by date'
-        });
+//        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=date:Sorted by date', 'directory', {
+//            title: 'Sorted by date'
+//        });
         page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=duration:Sorted by duration', 'directory', {
             title: 'Sorted by duration'
         });
