@@ -131,7 +131,7 @@
 
     // Sorting selected category
     plugin.addURI(plugin.getDescriptor().id + ":sorting:(.*):(.*):(.*)", function(page, title, url, sorting) {
-        setPageHeader(page, '4tube - ' + unescape(title));
+        setPageHeader(page, plugin.getDescriptor().id + ' - ' + unescape(title));
 //        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + ":date", 'directory', {
 //            title: "Sorted by date",
 //            icon: logo
@@ -153,7 +153,7 @@
 
     // Enter category
     plugin.addURI(plugin.getDescriptor().id + ":category:(.*):(.*):(.*)", function(page, title, url, sorting) {
-        setPageHeader(page, plugin.getDescriptor().id + ' - Category: ' + unescape(title) + ' - Sorted by ' + sorting );
+        setPageHeader(page, plugin.getDescriptor().id + ' - ' + unescape(title) + ' - Sorted by ' + sorting );
         index(page, unescape(url) + '?sort=' + sorting);
     });
 
@@ -165,20 +165,20 @@
 
     // Pornstars page
     plugin.addURI(plugin.getDescriptor().id + ":pornstars", function(page) {
-        setPageHeader(page, '4tube - Pornstars');
+        setPageHeader(page, plugin.getDescriptor().id + ' - Pornstars');
         indexPornstars(page);
     });
 
     // Main page
-    plugin.addURI(plugin.getDescriptor().id + ":movies:(.*):(.*)", function(page, url, title) {
-        setPageHeader(page, '4tube - ' + unescape(title));
-        index(page, unescape(url));
+    plugin.addURI(plugin.getDescriptor().id + ":movies:(.*)", function(page, sorted) {
+        setPageHeader(page, plugin.getDescriptor().id + ' - Sorted by' + sorted);
+        index(page, '/videos?sort=' + sorted);
     });
 
 
     // Categories page
     plugin.addURI(plugin.getDescriptor().id + ":categories", function(page) {
-        setPageHeader(page, '4tube - Categories');
+        setPageHeader(page, plugin.getDescriptor().id + ' - Categories');
         page.loading = true;
         var doc = showtime.httpReq(BASE_URL + "/tags").toString();
         page.loading = false;
@@ -228,7 +228,7 @@
             if (!tryToSearch) return false;
             page.loading = true;
             var doc = showtime.httpReq(checkLink(url)).toString();
-            var fullTitle = '- Page ' + doc.match(/currentPage = '(.*?)';/)[1] + '-';
+            var fullTitle = '- Page ' + doc.match(/currentPage = '(.*?)';/)[1] + ' -';
             page.loading = false;
             page.appendItem("", "separator", {
                 title: fullTitle
@@ -245,21 +245,21 @@
 
     // Start page
     plugin.addURI(plugin.getDescriptor().id + ":start", function(page) {
-        setPageHeader(page, "4tube - Home");
+        setPageHeader(page, plugin.getDescriptor().id + ' - Home');
         page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=popularity:Sorted by popularity', 'directory', {
             title: 'Sorted by popularity'
         });
-//        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=date:Sorted by date', 'directory', {
-//            title: 'Sorted by date'
+//        page.appendItem(plugin.getDescriptor().id + ':movies:date', 'directory', {
+//            title: 'Videos sorted by date'
 //        });
-        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=duration:Sorted by duration', 'directory', {
-            title: 'Sorted by duration'
+        page.appendItem(plugin.getDescriptor().id + ':movies:duration', 'directory', {
+            title: 'Videos sorted by duration'
         });
-        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=rating:Sorted by rating', 'directory', {
-            title: 'Sorted by rating'
+        page.appendItem(plugin.getDescriptor().id + ':movies:rating', 'directory', {
+            title: 'Videos sorted by rating'
         });
-        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=views:Sorted by views', 'directory', {
-            title: 'Sorted by views'
+        page.appendItem(plugin.getDescriptor().id + ':movies:views', 'directory', {
+            title: 'Videos sorted by views'
         });
         page.appendItem(plugin.getDescriptor().id + ':categories', 'directory', {
             title: 'Categories'
