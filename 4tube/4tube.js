@@ -133,19 +133,19 @@
     plugin.addURI(plugin.getDescriptor().id + ":sorting:(.*):(.*)", function(page, title, url) {
         setPageHeader(page, '4tube - ' + unescape(title));
         page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url, 'directory', {
-            title: "Newest",
+            title: "Sorted by date",
             icon: logo
         });
-        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url.replace("adddate", "rate"), 'directory', {
-            title: "Highest rated",
+        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + '?sort=duration', 'directory', {
+            title: "Sorted by duration",
             icon: logo
         });
-        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url.replace("adddate", "viewnum"), 'directory', {
-            title: "Most Viewed",
+        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + '?sort=rating', 'directory', {
+            title: "Sorted by rating",
             icon: logo
         });
-        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url.replace("adddate", "title"), 'directory', {
-            title: "By Title",
+        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + '?sort=views', 'directory', {
+            title: "Sorted by views",
             icon: logo
         });
     });
@@ -226,7 +226,7 @@
             if (!tryToSearch) return false;
             page.loading = true;
             var doc = showtime.httpReq(checkLink(url)).toString();
-            var fullTitle = 'Latest HD Videos - Page ' + doc.match(/currentPage = '(.*?)';/)[1];
+            var fullTitle = '- Page - ' + doc.match(/currentPage = '(.*?)';/)[1];
             page.loading = false;
             page.appendItem("", "separator", {
                 title: fullTitle
@@ -244,15 +244,21 @@
     // Start page
     plugin.addURI(plugin.getDescriptor().id + ":start", function(page) {
         setPageHeader(page, "4tube - Home");
- //       page.appendItem(plugin.getDescriptor().id + ':movies:/view/basic/mostrecent/:Newest', 'directory', {
- //           title: 'Newest'
- //       });
- //       page.appendItem(plugin.getDescriptor().id + ':movies:/view/basic/toprated/:Highest Rated', 'directory', {
- //           title: 'Highest Rated'
- //       });
- //       page.appendItem(plugin.getDescriptor().id + ':movies:/view/basic/mostviewed/:Most Viewed', 'directory', {
- //           title: 'Most Viewed'
- //       });
+        page.appendItem(plugin.getDescriptor().id + ':movies:/videos:Sorted by Popularity', 'directory', {
+            title: 'Sorted by Popularity'
+        });
+        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=date:Sorted by date', 'directory', {
+            title: 'Sorted by date'
+        });
+        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=duration:Sorted by duration', 'directory', {
+            title: 'Sorted by duration'
+        });
+        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=rating:Sorted by rating', 'directory', {
+            title: 'Sorted by rating'
+        });
+        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=views:Sorted by views', 'directory', {
+            title: 'Sorted by views'
+        });
         page.appendItem(plugin.getDescriptor().id + ':categories', 'directory', {
             title: 'Categories'
         });
