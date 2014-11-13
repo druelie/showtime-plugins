@@ -130,36 +130,36 @@
     });
 
     // Sorting selected category
-    plugin.addURI(plugin.getDescriptor().id + ":sorting:(.*):(.*)", function(page, title, url) {
+    plugin.addURI(plugin.getDescriptor().id + ":sorting:(.*):(.*):(.*)", function(page, title, url, sorting) {
         setPageHeader(page, '4tube - ' + unescape(title));
-//        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url, 'directory', {
+//        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + ":date", 'directory', {
 //            title: "Sorted by date",
 //            icon: logo
 //        });
-        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + '?sort=duration', 'directory', {
+        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + ':duration', 'directory', {
             title: "Sorted by duration",
             icon: logo
         });
-        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + '?sort=rating', 'directory', {
+        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + ':rating', 'directory', {
             title: "Sorted by rating",
             icon: logo
         });
-        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + '?sort=views', 'directory', {
+        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + ':views', 'directory', {
             title: "Sorted by views",
             icon: logo
         });
-        index(page, unescape(url));
+        index(page, unescape(url) + '?sort=' + sorting); // default
     });
 
     // Enter category
-    plugin.addURI(plugin.getDescriptor().id + ":category:(.*):(.*)", function(page, title, url) {
-        setPageHeader(page, unescape(title));
-        index(page, unescape(url));
+    plugin.addURI(plugin.getDescriptor().id + ":category:(.*):(.*):(.*)", function(page, title, url, sorting) {
+        setPageHeader(page, plugin.getDescriptor().id + ' - Category: ' + unescape(title) + ' - Sorted by ' + sorting );
+        index(page, unescape(url) + '?sort=' + sorting);
     });
 
     // Pornstar page
     plugin.addURI(plugin.getDescriptor().id + ":pornstar:(.*):(.*)", function(page, url, title) {
-        setPageHeader(page, '4tube - ' + unescape(title));
+        setPageHeader(page, plugin.getDescriptor().id + ' - ' + unescape(title));
         index(page, unescape(url));
     });
 
@@ -187,7 +187,7 @@
         var re = /"thumb-link" href="([\S\s]*?)" title="([\S\s]*?)">[\S\s]*?icon-video"><\/i>([\S\s]*?)<[\S\s]*?<img data-original="([\S\s]*?)"/g;
         var match = re.exec(mp);
         while (match) {
-            page.appendItem(plugin.getDescriptor().id + ":sorting:" + escape(match[2]) + ":" + escape(match[1]), "video", {
+            page.appendItem(plugin.getDescriptor().id + ":sorting:" + escape(match[2]) + ":" + escape(match[1]) + ":date", "video", {
                 title: new showtime.RichText(match[2] + colorStr(match[3].replace(',','.'), blue)),
                 icon: match[4]
             });
@@ -228,7 +228,7 @@
             if (!tryToSearch) return false;
             page.loading = true;
             var doc = showtime.httpReq(checkLink(url)).toString();
-            var fullTitle = '- Page - ' + doc.match(/currentPage = '(.*?)';/)[1];
+            var fullTitle = '- Page ' + doc.match(/currentPage = '(.*?)';/)[1] + '-';
             page.loading = false;
             page.appendItem("", "separator", {
                 title: fullTitle
@@ -246,7 +246,7 @@
     // Start page
     plugin.addURI(plugin.getDescriptor().id + ":start", function(page) {
         setPageHeader(page, "4tube - Home");
-        page.appendItem(plugin.getDescriptor().id + ':movies:/videos:Sorted by popularity', 'directory', {
+        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=popularity:Sorted by popularity', 'directory', {
             title: 'Sorted by popularity'
         });
 //        page.appendItem(plugin.getDescriptor().id + ':movies:/videos?sort=date:Sorted by date', 'directory', {
@@ -267,7 +267,7 @@
  //       page.appendItem(plugin.getDescriptor().id + ':pornstars', 'directory', {
  //           title: 'Pornstars'
  //       });
-        index(page, HD_URL);
+        index(page, BASE_URL + '/videos?sort=date');
     });
 
     plugin.addSearcher(plugin.getDescriptor().id, logo, function(page, query) {
