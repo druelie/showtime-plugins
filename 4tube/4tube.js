@@ -211,7 +211,7 @@
     }
 
     function index(page, url) {
-        if ((HDOnly == true) url = url + '&quality=hd';
+        if (HDOnly == true) url = url + '&quality=hd';
         showtime.trace("Index URL: " + url, "AC");
         page.loading = true;
         page.entries = 0;
