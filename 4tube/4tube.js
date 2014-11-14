@@ -252,6 +252,7 @@
             var next = doc.match(/<li><a href="(.*?)" id="next" /);
             if (!next) return tryToSearch = false;
             url = unescape(next[1]);
+            showtime.trace("Unescaped URL: " + url, "AC");
             return true;
         }
         loader();
