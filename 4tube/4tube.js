@@ -21,7 +21,10 @@
     var BASE_URL = "http://www.4tube.com";
     var HD_URL = BASE_URL + "/videos?sort=date&quality=hd";
     var logo = plugin.path + "4tube.png";
-
+    var HDOnly = true;
+    showtime.trace("HDOnly set to TRUE", "AC");
+    
+    
     function setPageHeader(page, title) {
         if (page.metadata) {
             page.metadata.title = title;
@@ -201,7 +204,7 @@
     }
 
     function index(page, url) {
-        url = url + HDOnly;
+        if (HDOnly == true) url = url + '&quality=hd';
         showtime.trace("Index URL: " + url, "AC");
         page.loading = true;
         page.entries = 0;
@@ -244,14 +247,14 @@
         page.paginator = loader;
     }
 
-    var HDOnly;
+   
     // Start page
     plugin.addURI(plugin.getDescriptor().id + ":start", function(page) {
         setPageHeader(page, plugin.getDescriptor().id + ' - Home');
         
-        page.options.createBool("hdonly", "Show HD only", false, function(v) {
-            if (v === true) HDOnly = '&quality=hd';
-            else            HDOnly = '';
+        page.options.createBool("hdonly", "Show HD only", HDOnly, function(v) {
+            HDOnly = v;
+            showtime.trace("HDOnly set to" + HDOnly, "AC");
         });
         
         page.appendItem(plugin.getDescriptor().id + ':movies:popularity', 'directory', {
