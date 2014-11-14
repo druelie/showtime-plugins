@@ -211,8 +211,7 @@
     }
 
     function index(page, url) {
-        if ((HDOnly == true) && !url.match(/&quality=hd/))
-            url = url + '&quality=hd';
+        if ((HDOnly == true) url = url + '&quality=hd';
         showtime.trace("Index URL: " + url, "AC");
         page.loading = true;
         page.entries = 0;
@@ -242,7 +241,9 @@
             if (!tryToSearch) return false;
             page.loading = true;
             var doc = showtime.httpReq(checkLink(url)).toString();
-            var fullTitle = '- Page ' + doc.match(/currentPage = '(.*?)';/)[1] + ' -';
+            var pageNumber = doc.match(/currentPage = '(.*?)';/)[1];
+            var fullTitle = '- Page ' + pageNumber + ' -';
+            showtime.trace("Page: " + pageNumber + " Loader URL: " + url, "AC");
             page.loading = false;
             page.appendItem("", "separator", {
                 title: fullTitle
