@@ -218,16 +218,16 @@
         var tryToSearch = true;
 
         function scraper(doc) {
-            //                                        1-link                      2-title                               3-icon      4-HD ?                           5-length                                          6-views
-            var re = />Watch Later<\/button><a href="([\S\s]*?)" [\S\s]*? title="([\S\s]*?)" [\S\s]*?<img data-master="([\S\s]*?)" ([\S\s]*?)"icon icon-timer"><\/i>([\S\s]*?)<\/li><li><i class="icon icon-eye"><\/i>([\S\s]*?)</g;
+            //                                        1-link                      2-title                               3-icon      4-HD ?                           5-length                                          6-views                          7-uploaded
+            var re = />Watch Later<\/button><a href="([\S\s]*?)" [\S\s]*? title="([\S\s]*?)" [\S\s]*?<img data-master="([\S\s]*?)" ([\S\s]*?)"icon icon-timer"><\/i>([\S\s]*?)<\/li><li><i class="icon icon-eye"><\/i>([\S\s]*?)<[\S\s]*?icon-up"><\/i>([\S\s]*?)</g;
             var match = re.exec(doc);
             while (match) {
                 var hdString = '';
                 if (match[4].match(/<li>HD<\/li>/)) hdString = '[HD]';
                 page.appendItem(plugin.getDescriptor().id + ":play:" + escape(match[1]) + ":" + escape(match[2]), "video", {
-                    title: new showtime.RichText(colorStr(hdString, orange) + match[2] + colorStr(match[5], orange)),
+                    title: new showtime.RichText(coloredStr(hdString, orange) + match[2] + colorStr(match[5], orange)),
                     icon: match[3],
-                    description: new showtime.RichText(coloredStr('Views: ', orange) + match[6]),
+                    description: new showtime.RichText(coloredStr('Views: ', orange) + match[6] + coloredStr('Uploaded: ', orange) + match[7]),
                     genre: 'Adult',
                     duration: match[5]
                     // rating: match[6] * 10
