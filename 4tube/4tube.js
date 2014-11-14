@@ -211,7 +211,8 @@
     }
 
     function index(page, url) {
-        if (HDOnly == true) url = url + '&quality=hd';
+        if ((HDOnly == true) && !url.match(/&quality=hd/))
+            url = url + '&quality=hd';
         showtime.trace("Index URL: " + url, "AC");
         page.loading = true;
         page.entries = 0;
@@ -227,7 +228,7 @@
                 page.appendItem(plugin.getDescriptor().id + ":play:" + escape(match[1]) + ":" + escape(match[2]), "video", {
                     title: new showtime.RichText(coloredStr(hdString, orange) + match[2] + colorStr(match[5], orange)),
                     icon: match[3],
-                    description: new showtime.RichText(coloredStr('Views: ', orange) + match[6] + coloredStr('Uploaded: ', orange) + match[7]),
+                    description: new showtime.RichText(coloredStr('Views: ', orange) + match[6] + ' - ' + coloredStr('Uploaded: ', orange) + match[7]),
                     genre: 'Adult',
                     duration: match[5]
                     // rating: match[6] * 10
