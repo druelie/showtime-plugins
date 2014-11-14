@@ -50,7 +50,7 @@
         var tryToSearch = true, url = '/pornstars/'
 
         function scraper(doc) {
-	    // 1-link, 2-icon, 3-title, 4-videos, 5-views
+        // 1-link, 2-icon, 3-title, 4-videos, 5-views
             var re = /<li>[\S\s]*?<a href="([\S\s]*?)">[\S\s]*?src="([\S\s]*?)" title="([\S\s]*?)"[\S\s]*?<p>Videos: ([\S\s]*?) \&nbsp; Views: ([\S\s]*?)<\/p>/g;
             var match = re.exec(doc);
             while (match) {
@@ -101,24 +101,24 @@
         var tempUrl  = 'http://tkn.4tube.com/' + mediaID + '/desktop/' + bestQual;
         // add httpReq here
         var doc = showtime.httpReq(tempUrl, {
-			debug: true,
-			method: 'POST',
-			headers: {
-				'Accept': 'application/json, text/javascript, */*; q=0.01',
-				'Origin': 'http://www.4tube.com',
-				'Accept-Charset': null,
+            debug: true,
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json, text/javascript, */*; q=0.01',
+                'Origin': 'http://www.4tube.com',
+                'Accept-Charset': null,
                 'Content-Type': null
-			}
-		}).toString();
-		showtime.trace("Videoserver response: "+doc,"AC");
+            }
+        }).toString();
+        showtime.trace("Videoserver response: "+doc,"AC");
         var re = /"status":"success","token":"(http[^<>"]*?)"/;
         var videoUrl = re.exec(doc)[1];
         showtime.trace("VideoURL: "+videoUrl,"AC");
         if (videoUrl != null)
         {
             videoUrl = videoUrl + "&start=0";
-	    }
-	    page.loading = false;
+        }
+        page.loading = false;
         page.type = "video";
         page.source = "videoparams:" + showtime.JSONEncode({
             title: unescape(title),
@@ -183,7 +183,7 @@
         var doc = showtime.httpReq(BASE_URL + "/tags").toString();
         page.loading = false;
         var mp = doc.match(/categories_page([\S\s]*?)footer/)[1];
-	//                            1-link             2-title                              3-numofvideos                          4-icon
+    //                            1-link             2-title                              3-numofvideos                          4-icon
         var re = /"thumb-link" href="([\S\s]*?)" title="([\S\s]*?)">[\S\s]*?icon-video"><\/i>([\S\s]*?)<[\S\s]*?<img data-original="([\S\s]*?)"/g;
         var match = re.exec(mp);
         while (match) {
@@ -201,8 +201,8 @@
     }
 
     function index(page, url) {
-	    url = url + HDOnly;
-	    showtime.trace("Index URL: " + url, "AC");
+        url = url + HDOnly;
+        showtime.trace("Index URL: " + url, "AC");
         page.loading = true;
         page.entries = 0;
         var tryToSearch = true;
@@ -244,16 +244,16 @@
         page.paginator = loader;
     }
 
-	var HDOnly;
+    var HDOnly;
     // Start page
     plugin.addURI(plugin.getDescriptor().id + ":start", function(page) {
         setPageHeader(page, plugin.getDescriptor().id + ' - Home');
-		
-		page.options.createBool("hdonly", "Show HD only", false, function(v) {
+        
+        page.options.createBool("hdonly", "Show HD only", false, function(v) {
             if (v === true) HDOnly = '&quality=hd';
-			else            HDOnly = '';
+            else            HDOnly = '';
         });
-		
+        
         page.appendItem(plugin.getDescriptor().id + ':movies:popularity', 'directory', {
             title: 'Sorted by popularity'
         });
@@ -261,13 +261,13 @@
 //            title: 'Videos sorted by date'
 //        });
         page.appendItem(plugin.getDescriptor().id + ':movies:duration', 'directory', {
-            title: 'Videos sorted by duration'
+            title: 'Sorted by duration'
         });
         page.appendItem(plugin.getDescriptor().id + ':movies:rating', 'directory', {
-            title: 'Videos sorted by rating'
+            title: 'Sorted by rating'
         });
         page.appendItem(plugin.getDescriptor().id + ':movies:views', 'directory', {
-            title: 'Videos sorted by views'
+            title: 'Sorted by views'
         });
         page.appendItem(plugin.getDescriptor().id + ':categories', 'directory', {
             title: 'Categories'
