@@ -22,7 +22,6 @@
     var HD_URL = BASE_URL + "/videos?sort=date&quality=hd";
     var logo = plugin.path + "4tube.png";
     var HDOnly = true;
-    showtime.trace("HDOnly set to TRUE", "AC");
     
     
     function setPageHeader(page, title) {
@@ -32,6 +31,11 @@
         }
         page.type = "directory";
         page.contents = "items";
+        page.options.createBool("hdonly", "Show HD only", HDOnly, function(v) {
+            HDOnly = v;
+            page.flush();
+        });
+
         page.loading = false;
     }
 
@@ -135,6 +139,10 @@
     // Sorting selected category
     plugin.addURI(plugin.getDescriptor().id + ":sorting:(.*):(.*):(.*)", function(page, title, url, sorting) {
         setPageHeader(page, plugin.getDescriptor().id + ' - ' + unescape(title));
+        page.options.createBool("hdonly", "Show HD only", HDOnly, function(v) {
+            HDOnly = v;
+        });
+        
 //        page.appendItem(plugin.getDescriptor().id + ':category:' + title + ":" + url + ":date", 'directory', {
 //            title: "Sorted by date",
 //            icon: logo
@@ -251,12 +259,6 @@
     // Start page
     plugin.addURI(plugin.getDescriptor().id + ":start", function(page) {
         setPageHeader(page, plugin.getDescriptor().id + ' - Home');
-        
-        page.options.createBool("hdonly", "Show HD only", HDOnly, function(v) {
-            HDOnly = v;
-            showtime.trace("HDOnly set to" + HDOnly, "AC");
-        });
-        
         page.appendItem(plugin.getDescriptor().id + ':movies:popularity', 'directory', {
             title: 'Sorted by popularity'
         });
