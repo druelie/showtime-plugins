@@ -21,13 +21,12 @@
     var BASE_URL = "http://www.4tube.com";
     var HD_URL = BASE_URL + "/videos?sort=date&quality=hd";
     var logo = plugin.path + "4tube.png";
-    var HDOnly = true;
 
     // Filter defaults
     var sort     = "date";
     var quality  = "hd";
-    var duration = "any";
-    var time     = "any";
+    var duration = ""; // Any
+    var time     = ""; // Any
 
 
     plugin.createService(plugin.getDescriptor().id, plugin.getDescriptor().id + ":start", "video", true, logo);
@@ -42,69 +41,57 @@
         return '<font color="' + color + '">' + str + '</font>';
     }
 
-    function setPageHeader(page, title, addHdOption) {
+    function setPageHeader(page, title) {
         if (page.metadata) {
             page.metadata.title = title;
             page.metadata.logo = logo;
         }
         page.type = "directory";
         page.contents = "items";
-//        if (addHdOption) {
-//            page.options.createBool("hdonly", "Show HD only", HDOnly, function(v) {
-//                HDOnly = v;
-//            });
-//        }
 
         page.loading = false;
     }
 
-    function findAndSetPageOptions(page, url) {
-        var doc = showtime.httpReq(checkLink(url)).toString();
-        var filters = doc.match(/sort_options([\S\s]*?)video_list_column/)[1];
+    function setPageOptions(page) {
+        var sortOptions = [
+            ["date","Date",         (sort == "date")],
+            ["duration","Duration", (sort == "duration")],
+            ["rating","Rating",     (sort == "rating")],
+            ["views","Views",       (sort == "views")]
+        ];
+        page.options.createMultiOpt("sort", "Sort by", sortOptions, function(v) {
+            sort = v;
+        });
 
-        var filter = filters.match(/"filter"[\S\s]*?div class/g);
-        if (filter) {
+        var qualityOptions = [
+            ["","Any Quality", (quality == "")],
+            ["hd","HD Only",   (quality == "hd")]
+        ];
+        page.options.createMultiOpt("quality", "Quality", qualityOptions, function(v) {
+            quality = v;
+        });
 
-            for (var i = 0; i < filter.length; ++i)
-            {
-                var filterArr = "";
+        var durationOptions = [
+            ["","Any Duration",            (duration == "")],
+            ["short","Short (0-5 min.)",   (duration == "short")],
+            ["medium","Medium (5-20min.)", (duration == "medium")],
+            ["long","Long (20+ min.)",     (duration == "long")]
+        ];
+        page.options.createMultiOpt("duration", "Duration", durationOptions, function(v) {
+            duration = v;
+        });
 
-                var filterTitle  = filter[i].match(/<\/i>([\S\s]*?)<\/h2>/)[1];
-                filterTitle = filterTitle.replace(/^\s+|\s+$/g,''); // remove leading & trailing spaces (trim() does not work)
-                var filterString = filter[i].match(/change-filter-([\S\s]*?)">/)[1];
 
-                var counter = 0;
-
-                if (filterString == "quality")
-                {
-                    filterArr += '["","Any Quality"],';
-                    filterArr += '["hd","HD Only",true],'; // default: HD
-                    counter = 2;
-                }
-                else
-                {
-                    //                            1-value             2-name
-                    var re = /data-filter-field="([\S\s]*?)"[\S\s]*?>([\S\s]*?)</g;
-                    var match = re.exec(filter[i]);
-
-                    while (match) {
-                        filterArr += '["' + match[1] + '","' + match[2] + '"';
-                        if (counter == 0) filterArr += ',true],'; // first is default
-                        else              filterArr += '],';
-                        counter++;
-
-                        var match = re.exec(filter[i]);
-                    }
-                }
-
-                filterArr = '[' + filterArr.slice(0, -1) + ']';
-                filterArr = eval(filterArr); // convert string to array
-
-                page.options.createMultiOpt(filterString, filterTitle, filterArr, function(v) {
-                    var myOpt = v;
-                });
-            }
-        } // filter
+        var timeOptions = [
+            ["","Any Time", (time == "")],
+            ["24h","Past 24 hours", (time == "24h")],
+            ["week","Past Week", (time == "week")],
+            ["month","Past Month", (time == "month")],
+            ["year","Past Year", (time == "year")]
+        ];
+        page.options.createMultiOpt("time", "Upload time", timeOptions, function(v) {
+            time = v;
+        });
     }
 
 
@@ -148,54 +135,34 @@
     });
 
     // Sorting selected category
-    plugin.addURI(plugin.getDescriptor().id + ":sorting:(.*):(.*):(.*)", function(page, title, url, sorting) {
-        setPageHeader(page, plugin.getDescriptor().id + " - " + unescape(title), false);
-        page.options.createBool("hdonly", "Show HD only", HDOnly, function(v) {
-            HDOnly = v;
-        });
-
-//        page.appendItem(plugin.getDescriptor().id + ":category:" + title + ":" + url + ":date", "directory", {
-//            title: "Sorted by date",
-//            icon: logo
-//        });
-        page.appendItem(plugin.getDescriptor().id + ":category:" + title + ":" + url + ":duration", "directory", {
-            title: "Sorted by duration",
-            icon: logo
-        });
-        page.appendItem(plugin.getDescriptor().id + ":category:" + title + ":" + url + ":rating", "directory", {
-            title: "Sorted by rating",
-            icon: logo
-        });
-        page.appendItem(plugin.getDescriptor().id + ":category:" + title + ":" + url + ":views", "directory", {
-            title: "Sorted by views",
-            icon: logo
-        });
-        index(page, url + "?sort=" + sorting); // default
+    plugin.addURI(plugin.getDescriptor().id + ":sorting:(.*):(.*)", function(page, title, url) {
+        setPageHeader(page, plugin.getDescriptor().id + " - " + unescape(title));
+        index(page, url);
     });
 
     // Enter category
-    plugin.addURI(plugin.getDescriptor().id + ":category:(.*):(.*):(.*)", function(page, title, url, sorting) {
-        setPageHeader(page, plugin.getDescriptor().id + " - " + unescape(title) + " - Sorted by " + sorting, true);
-        index(page, url + "?sort=" + sorting);
+    plugin.addURI(plugin.getDescriptor().id + ":category:(.*):(.*)", function(page, title, url) {
+        setPageHeader(page, plugin.getDescriptor().id + " - " + unescape(title) + " - Sorted by ");
+        index(page, url);
     });
 
     // Pornstar page
     plugin.addURI(plugin.getDescriptor().id + ":pornstar:(.*):(.*)", function(page, url, title) {
-        setPageHeader(page, plugin.getDescriptor().id + " - " + unescape(title), true);
-        index(page, url + "?sort=date");
+        setPageHeader(page, plugin.getDescriptor().id + " - " + unescape(title));
+        index(page, url);
     });
 
     // Pornstars page
     plugin.addURI(plugin.getDescriptor().id + ":pornstars", function(page) {
-        setPageHeader(page, plugin.getDescriptor().id + " - Pornstars", false);
+        setPageHeader(page, plugin.getDescriptor().id + " - Pornstars");
         indexPornstars(page);
     });
 
     // Main page
-    plugin.addURI(plugin.getDescriptor().id + ":movies:(.*)", function(page, sorted) {
-        setPageHeader(page, plugin.getDescriptor().id + " - Sorted by " + sorted, true);
-        index(page, "/videos?sort=" + sorted);
-    });
+//    plugin.addURI(plugin.getDescriptor().id + ":movies", function(page) {
+//        setPageHeader(page, plugin.getDescriptor().id + " - Sorted by ");
+//        index(page, "/videos");
+//    });
 
 
     // Categories page
@@ -209,7 +176,7 @@
         var re = /"thumb-link" href="([\S\s]*?)" title="([\S\s]*?)">[\S\s]*?icon-video"><\/i>([\S\s]*?)<[\S\s]*?<img data-original="([\S\s]*?)"/g;
         var match = re.exec(mp);
         while (match) {
-            page.appendItem(plugin.getDescriptor().id + ":sorting:" + escape(match[2]) + ":" + escape(match[1]) + ":date", "video", {
+            page.appendItem(plugin.getDescriptor().id + ":sorting:" + escape(match[2]) + ":" + escape(match[1]), "video", {
                 title: new showtime.RichText(match[2] + colorStr(match[3].replace(",","."), blue)),
                 icon: match[4]
             });
@@ -267,9 +234,15 @@
     }
 
     function index(page, url) {
-        findAndSetPageOptions(page, url);
-        if (HDOnly == true) url = url + "&quality=hd";
+        setPageOptions(page);
+        // add filters
+        url += "?sort="+sort;
+        url += "&quality="+quality;
+        url += "&duration="+duration;
+        url += "&time="+time;
+
         showtime.trace("Index URL: " + url, "AC");
+
         page.loading = true;
         page.entries = 0;
         var tryToSearch = true;
@@ -318,29 +291,14 @@
 
     // Start page
     plugin.addURI(plugin.getDescriptor().id + ":start", function(page) {
-        setPageHeader(page, plugin.getDescriptor().id + " - Home", true);
-        page.appendItem(plugin.getDescriptor().id + ":movies:popularity", "directory", {
-            title: "Sorted by popularity"
-        });
-//        page.appendItem(plugin.getDescriptor().id + ":movies:date", "directory", {
-//            title: "Videos sorted by date"
-//        });
-        page.appendItem(plugin.getDescriptor().id + ":movies:duration", "directory", {
-            title: "Sorted by duration"
-        });
-        page.appendItem(plugin.getDescriptor().id + ":movies:rating", "directory", {
-            title: "Sorted by rating"
-        });
-        page.appendItem(plugin.getDescriptor().id + ":movies:views", "directory", {
-            title: "Sorted by views"
-        });
+        setPageHeader(page, plugin.getDescriptor().id + " - Home");
         page.appendItem(plugin.getDescriptor().id + ":categories", "directory", {
             title: "Categories"
         });
         page.appendItem(plugin.getDescriptor().id + ":pornstars", "directory", {
             title: "Pornstars"
         });
-        index(page, "/videos?sort=date");
+        index(page, "/videos");
     });
 
     plugin.addSearcher(plugin.getDescriptor().id, logo, function(page, query) {
