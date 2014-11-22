@@ -1,7 +1,7 @@
 /*
  *  4tube - Showtime Plugin
  *
- *  Copyright (C) 2012-2014 AC
+ *  Copyright (C) 2012-2014 druelie
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -83,11 +83,11 @@
 
 
         var timeOptions = [
-            ["","Any Time", (time == "")],
+            ["","Any Time",         (time == "")],
             ["24h","Past 24 hours", (time == "24h")],
-            ["week","Past Week", (time == "week")],
-            ["month","Past Month", (time == "month")],
-            ["year","Past Year", (time == "year")]
+            ["week","Past Week",    (time == "week")],
+            ["month","Past Month",  (time == "month")],
+            ["year","Past Year",    (time == "year")]
         ];
         page.options.createMultiOpt("time", "Upload time", timeOptions, function(v) {
             time = v;
@@ -201,14 +201,23 @@
         //                                1-link             2-title                             3-videos                                4-twitter                             5-icon,
             var re = /"thumb-link" href="([\S\s]*?)" title="([\S\s]*?)"[\S\s]*?icon-video"><\/i>([\S\s]*?)<[\S\s]*?"icon-twitter"><span>([\S\s]*?)<[\S\s]*?img data-original="([\S\s]*?)"/g;
             var match = re.exec(doc);
-            while (match) {
-                page.appendItem(plugin.getDescriptor().id + ":pornstar:" + escape(match[1]) + ":" + escape(match[2]), "video", {
-                    title: new showtime.RichText(match[2] + colorStr(match[3], orange)),
-                    icon: match[5],
-                    description: new showtime.RichText(coloredStr("Twitter: ", orange) + match[4])
+
+            if (match) {
+                while (match) {
+                    page.appendItem(plugin.getDescriptor().id + ":pornstar:" + escape(match[1]) + ":" + escape(match[2]), "video", {
+                        title: new showtime.RichText(match[2] + colorStr(match[3], orange)),
+                        icon: match[5],
+                        description: new showtime.RichText(coloredStr("Twitter: ", orange) + match[4])
+                    });
+                    page.entries++;
+                    match = re.exec(doc);
+                }
+            }
+            else // no match
+            {
+                page.appendItem("", "separator", {
+                    title: "No results - Please change filter settings"
                 });
-                page.entries++;
-                match = re.exec(doc);
             }
         }
 
@@ -236,10 +245,10 @@
     function index(page, url) {
         setPageOptions(page);
         // add filters
-        url += "?sort="+sort;
-        url += "&quality="+quality;
-        url += "&duration="+duration;
-        url += "&time="+time;
+        url += "?sort=" + sort;
+        if (duration != "") url += "&duration=" + duration;
+        if (time     != "") url += "&time="     + time;
+        if (quality  != "") url += "&quality="  + quality;
 
         showtime.trace("Index URL: " + url, "AC");
 
@@ -251,19 +260,27 @@
             //                                        1-link                      2-title                               3-icon      4-HD ?                           5-length                                          6-views                          7-uploaded
             var re = />Watch Later<\/button><a href="([\S\s]*?)" [\S\s]*? title="([\S\s]*?)" [\S\s]*?<img data-master="([\S\s]*?)" ([\S\s]*?)"icon icon-timer"><\/i>([\S\s]*?)<\/li><li><i class="icon icon-eye"><\/i>([\S\s]*?)<[\S\s]*?icon-up"><\/i>([\S\s]*?)</g;
             var match = re.exec(doc);
-            while (match) {
-                var hdString = "";
-                if (match[4].match(/<li>HD<\/li>/)) hdString = "[HD]";
-                page.appendItem(plugin.getDescriptor().id + ":play:" + escape(match[1]) + ":" + escape(match[2]), "video", {
-                    title: new showtime.RichText(coloredStr(hdString, orange) + match[2] + colorStr(match[5], orange)),
-                    icon: match[3],
-                    description: new showtime.RichText(coloredStr("Views: ", orange) + match[6] + " - " + coloredStr("Uploaded: ", orange) + match[7]),
-                    genre: "Adult",
-                    duration: match[5]
-                    // rating: match[6] * 10
+            if (match) {
+                while (match) {
+                    var hdString = "";
+                    if (match[4].match(/<li>HD<\/li>/)) hdString = "[HD]";
+                    page.appendItem(plugin.getDescriptor().id + ":play:" + escape(match[1]) + ":" + escape(match[2]), "video", {
+                        title: new showtime.RichText(coloredStr(hdString, orange) + match[2] + colorStr(match[5], orange)),
+                        icon: match[3],
+                        description: new showtime.RichText(coloredStr("Views: ", orange) + match[6] + " - " + coloredStr("Uploaded: ", orange) + match[7]),
+                        genre: "Adult",
+                        duration: match[5]
+                        // rating: match[6] * 10
+                    });
+                    page.entries++;
+                    match = re.exec(doc);
+                }
+            }
+            else // no match
+            {
+                page.appendItem("", "separator", {
+                    title: "No results - Please change filter settings"
                 });
-                page.entries++;
-                match = re.exec(doc);
             }
         }
 
@@ -271,6 +288,7 @@
             if (!tryToSearch) return false;
             page.loading = true;
             var doc = showtime.httpReq(checkLink(url)).toString();
+            showtime.trace("Doc: " + doc);
             var pageNumber = doc.match(/currentPage = '(.*?)';/)[1];
             var pageTitle = "- Page " + pageNumber + " -";
             showtime.trace("Page: " + pageNumber + " Loader URL: " + url, "AC");
