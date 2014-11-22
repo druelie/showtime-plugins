@@ -22,14 +22,13 @@
     var HD_URL = BASE_URL + "/videos?sort=date&quality=hd";
     var logo = plugin.path + "4tube.png";
 
+    var service = plugin.createService(plugin.getDescriptor().id, plugin.getDescriptor().id + ":start", "video", true, logo);
+
     // Filter defaults
-    var sort     = "date";
-    var quality  = "hd";
-    var duration = ""; // Any
-    var time     = ""; // Any
-
-
-    plugin.createService(plugin.getDescriptor().id, plugin.getDescriptor().id + ":start", "video", true, logo);
+    service.sort     = "date";
+    service.quality  = "hd";
+    service.duration = ""; // Any
+    service.time     = ""; // Any
 
     var blue = "6699CC", orange = "FFA500";
 
@@ -54,43 +53,43 @@
 
     function setPageOptions(page) {
         var sortOptions = [
-            ["date","Date",         (sort == "date")],
-            ["duration","Duration", (sort == "duration")],
-            ["rating","Rating",     (sort == "rating")],
-            ["views","Views",       (sort == "views")]
+            ["date","Date",         (service.sort == "date")],
+            ["duration","Duration", (service.sort == "duration")],
+            ["rating","Rating",     (service.sort == "rating")],
+            ["views","Views",       (service.sort == "views")]
         ];
         page.options.createMultiOpt("sort", "Sort by", sortOptions, function(v) {
-            sort = v;
-        });
+            service.sort = v;
+	});
 
         var qualityOptions = [
-            ["","Any Quality", (quality == "")],
-            ["hd","HD Only",   (quality == "hd")]
+            ["","Any Quality", (service.quality == "")],
+            ["hd","HD Only",   (service.quality == "hd")]
         ];
         page.options.createMultiOpt("quality", "Quality", qualityOptions, function(v) {
-            quality = v;
+            service.quality = v;
         });
 
         var durationOptions = [
-            ["","Any Duration",            (duration == "")],
-            ["short","Short (0-5 min.)",   (duration == "short")],
-            ["medium","Medium (5-20min.)", (duration == "medium")],
-            ["long","Long (20+ min.)",     (duration == "long")]
+            ["","Any Duration",            (service.duration == "")],
+            ["short","Short (0-5 min.)",   (service.duration == "short")],
+            ["medium","Medium (5-20min.)", (service.duration == "medium")],
+            ["long","Long (20+ min.)",     (service.duration == "long")]
         ];
         page.options.createMultiOpt("duration", "Duration", durationOptions, function(v) {
-            duration = v;
+            service.duration = v;
         });
 
 
         var timeOptions = [
-            ["","Any Time",         (time == "")],
-            ["24h","Past 24 hours", (time == "24h")],
-            ["week","Past Week",    (time == "week")],
-            ["month","Past Month",  (time == "month")],
-            ["year","Past Year",    (time == "year")]
+            ["","Any Time",         (service.time == "")],
+            ["24h","Past 24 hours", (service.time == "24h")],
+            ["week","Past Week",    (service.time == "week")],
+            ["month","Past Month",  (service.time == "month")],
+            ["year","Past Year",    (service.time == "year")]
         ];
         page.options.createMultiOpt("time", "Upload time", timeOptions, function(v) {
-            time = v;
+            service.time = v;
         });
     }
 
@@ -245,10 +244,10 @@
     function index(page, url) {
         setPageOptions(page);
         // add filters
-        url += "?sort=" + sort;
-        if (duration != "") url += "&duration=" + duration;
-        if (time     != "") url += "&time="     + time;
-        if (quality  != "") url += "&quality="  + quality;
+        url += "?sort=" + service.sort;
+        if (service.duration != "") url += "&duration=" + service.duration;
+        if (service.time     != "") url += "&time="     + service.time;
+        if (service.quality  != "") url += "&quality="  + service.quality;
 
         showtime.trace("Index URL: " + url, "AC");
 
