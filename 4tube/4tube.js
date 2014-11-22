@@ -141,7 +141,7 @@
 
     // Enter category
     plugin.addURI(plugin.getDescriptor().id + ":category:(.*):(.*)", function(page, title, url) {
-        setPageHeader(page, plugin.getDescriptor().id + " - " + unescape(title) + " - Sorted by ");
+        setPageHeader(page, plugin.getDescriptor().id + " - " + unescape(title));
         index(page, url);
     });
 
@@ -201,41 +201,50 @@
             var re = /"thumb-link" href="([\S\s]*?)" title="([\S\s]*?)"[\S\s]*?icon-video"><\/i>([\S\s]*?)<[\S\s]*?"icon-twitter"><span>([\S\s]*?)<[\S\s]*?img data-original="([\S\s]*?)"/g;
             var match = re.exec(doc);
 
-            if (match) {
-                while (match) {
-                    page.appendItem(plugin.getDescriptor().id + ":pornstar:" + escape(match[1]) + ":" + escape(match[2]), "video", {
-                        title: new showtime.RichText(match[2] + colorStr(match[3], orange)),
-                        icon: match[5],
-                        description: new showtime.RichText(coloredStr("Twitter: ", orange) + match[4])
-                    });
-                    page.entries++;
-                    match = re.exec(doc);
-                }
-            }
-            else // no match
-            {
-                page.appendItem("", "separator", {
-                    title: "No results - Please change filter settings"
-                });
-            }
+			while (match) {
+				page.appendItem(plugin.getDescriptor().id + ":pornstar:" + escape(match[1]) + ":" + escape(match[2]), "video", {
+					title: new showtime.RichText(match[2] + colorStr(match[3], orange)),
+					icon: match[5],
+					description: new showtime.RichText(coloredStr("Twitter: ", orange) + match[4])
+				});
+				page.entries++;
+				match = re.exec(doc);
+			}
         }
 
         function loader() {
             if (!tryToSearch) return false;
             page.loading = true;
-            var doc = showtime.httpReq(checkLink(url)).toString();
-            var pageNumber = doc.match(/currentPage = '(.*?)';/)[1];
-            var pageTitle = "- Page " + pageNumber + " -";
-            showtime.trace("Page: " + pageNumber + " Loader URL: " + url, "AC");
-            page.loading = false;
-            page.appendItem("", "separator", {
-                title: pageTitle
-            });
-            scraper(doc.match(/pornstars_page([\S\s]*?)"pagination"/)[1]);
-            var next = doc.match(/<li><a href="(http.*?)" id="next" /);
-            if (!next) return tryToSearch = false;
-            url = next[1];
-            return true;
+
+            url = checkLink(url);
+            var probe = showtime.probe(url);
+            
+            if (probe.result != 0) {
+				page.appendItem("", "separator", {
+					title: "- No Results -"
+				});
+				page.appendPassiveItem("file", "", {
+					title: "Change filter settings and reload page"
+				});
+                page.entries++;
+				page.loading = false;
+				return tryToSearch = false;
+			}
+			else
+			{
+				var doc = showtime.httpReq(url).toString();
+				var pageNumber = doc.match(/currentPage = '(.*?)';/)[1];
+				var pageTitle = "- Page " + pageNumber + " -";
+				page.loading = false;
+				page.appendItem("", "separator", {
+					title: pageTitle
+				});
+				scraper(doc.match(/pornstars_page([\S\s]*?)"pagination"/)[1]);
+				var next = doc.match(/<li><a href="(http.*?)" id="next" /);
+				if (!next) return tryToSearch = false;
+				url = next[1];
+				return true;
+			}
         }
         loader();
         page.paginator = loader;
@@ -249,8 +258,6 @@
         if (service.time     != "") url += "&time="     + service.time;
         if (service.quality  != "") url += "&quality="  + service.quality;
 
-        showtime.trace("Index URL: " + url, "AC");
-
         page.loading = true;
         page.entries = 0;
         var tryToSearch = true;
@@ -259,47 +266,55 @@
             //                                        1-link                      2-title                               3-icon      4-HD ?                           5-length                                          6-views                          7-uploaded
             var re = />Watch Later<\/button><a href="([\S\s]*?)" [\S\s]*? title="([\S\s]*?)" [\S\s]*?<img data-master="([\S\s]*?)" ([\S\s]*?)"icon icon-timer"><\/i>([\S\s]*?)<\/li><li><i class="icon icon-eye"><\/i>([\S\s]*?)<[\S\s]*?icon-up"><\/i>([\S\s]*?)</g;
             var match = re.exec(doc);
-            if (match) {
-                while (match) {
-                    var hdString = "";
-                    if (match[4].match(/<li>HD<\/li>/)) hdString = "[HD]";
-                    page.appendItem(plugin.getDescriptor().id + ":play:" + escape(match[1]) + ":" + escape(match[2]), "video", {
-                        title: new showtime.RichText(coloredStr(hdString, orange) + match[2] + colorStr(match[5], orange)),
-                        icon: match[3],
-                        description: new showtime.RichText(coloredStr("Views: ", orange) + match[6] + " - " + coloredStr("Uploaded: ", orange) + match[7]),
-                        genre: "Adult",
-                        duration: match[5]
-                        // rating: match[6] * 10
-                    });
-                    page.entries++;
-                    match = re.exec(doc);
-                }
-            }
-            else // no match
-            {
-                page.appendItem("", "separator", {
-                    title: "No results - Please change filter settings"
-                });
-            }
+			while (match) {
+				var hdString = "";
+				if (match[4].match(/<li>HD<\/li>/)) hdString = "[HD]";
+				page.appendItem(plugin.getDescriptor().id + ":play:" + escape(match[1]) + ":" + escape(match[2]), "video", {
+					title: new showtime.RichText(coloredStr(hdString, orange) + match[2] + colorStr(match[5], orange)),
+					icon: match[3],
+					description: new showtime.RichText(coloredStr("Views: ", orange) + match[6] + " - " + coloredStr("Uploaded: ", orange) + match[7]),
+					genre: "Adult",
+					duration: match[5]
+					// rating: match[6] * 10
+				});
+				page.entries++;
+				match = re.exec(doc);
+			}
         }
 
         function loader() {
             if (!tryToSearch) return false;
             page.loading = true;
-            var doc = showtime.httpReq(checkLink(url)).toString();
-            showtime.trace("Doc: " + doc);
-            var pageNumber = doc.match(/currentPage = '(.*?)';/)[1];
-            var pageTitle = "- Page " + pageNumber + " -";
-            showtime.trace("Page: " + pageNumber + " Loader URL: " + url, "AC");
-            page.loading = false;
-            page.appendItem("", "separator", {
-                title: pageTitle
-            });
-            scraper(doc.match(/data-video-uuid([\S\s]*?)"pagination"/)[1]);
-            var next = doc.match(/<li><a href="(http.*?)" id="next" /);
-            if (!next) return tryToSearch = false;
-            url = next[1];
-            return true;
+            url = checkLink(url);
+            var probe = showtime.probe(url);
+            
+            if (probe.result != 0) {
+				var pageTitle = "- No Results - Filter: " + service.sort + " " + service.quality + " " + service.duration + " " + service.time;
+				page.appendItem("", "separator", {
+					title: pageTitle
+				});
+				page.appendPassiveItem("file", "", {
+					title: "Change filter settings and reload page"
+				});
+                page.entries++;
+				page.loading = false;
+				return tryToSearch = false;
+			}
+			else
+			{
+				var doc = showtime.httpReq(url).toString();
+				var pageNumber = doc.match(/currentPage = '(.*?)';/)[1];
+				var pageTitle = "- Page " + pageNumber + " -  Filter: " + service.sort + " " + service.quality + " " + service.duration + " " + service.time;
+				page.loading = false;
+				page.appendItem("", "separator", {
+					title: pageTitle
+				});
+				scraper(doc.match(/data-video-uuid([\S\s]*?)"pagination"/)[1]);
+				var next = doc.match(/<li><a href="(http.*?)" id="next" /);
+				if (!next) return tryToSearch = false;
+				url = next[1];
+				return true;
+			}
         }
         loader();
         page.paginator = loader;
