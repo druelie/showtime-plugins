@@ -19,10 +19,18 @@
 
 (function(plugin) {
     var BASE_URL = "http://www.4tube.com";
-    var HD_URL = BASE_URL + "/videos?sort=date&quality=hd";
     var logo = plugin.path + "4tube.png";
 
-    var service = plugin.createService(plugin.getDescriptor().id, plugin.getDescriptor().id + ":start", "video", true, logo);
+    var service  = plugin.createService(plugin.getDescriptor().id, plugin.getDescriptor().id + ":start", "video", true, logo);
+    var settings = plugin.createSettings(plugin.getDescriptor().title, logo, plugin.getDescriptor().synopsis);
+
+    settings.createDivider('Video Settings');
+    var maxResFilter = [
+        ['1080', '1080p', true], ['720', '720p'], ['480', '480p'], ['360', '360p'], ['240', '240p']
+    ];
+    settings.createMultiOpt("maxVideoRes", "Maximum video playback resolution", maxResFilter, function(v){
+        service.maxVideoRes = v;
+    });
 
     // Filter defaults
     service.sort       = "date";
@@ -33,6 +41,8 @@
     service.catSort    = ""; // Name
     service.pStarsSort = ""; // Popularity
     service.pStarsName = ""; // Any
+    service.channelsSort = "";
+    service.channelsName = "";
 
     var blue = "6699CC", orange = "FFA500";
 
@@ -81,35 +91,80 @@
 		});
 
         var sortOptions = [
-            ["","Any Name", (service.pStarsSort == "")],
-            ["a","A", (service.pStarsSort == "a")],
-            ["b","B", (service.pStarsSort == "b")],
-            ["c","C", (service.pStarsSort == "c")],
-            ["d","D", (service.pStarsSort == "d")],
-            ["e","E", (service.pStarsSort == "e")],
-            ["f","F", (service.pStarsSort == "f")],
-            ["g","G", (service.pStarsSort == "g")],
-            ["h","H", (service.pStarsSort == "h")],
-            ["i","I", (service.pStarsSort == "i")],
-            ["j","J", (service.pStarsSort == "j")],
-            ["k","K", (service.pStarsSort == "k")],
-            ["l","L", (service.pStarsSort == "l")],
-            ["m","M", (service.pStarsSort == "m")],
-            ["n","N", (service.pStarsSort == "n")],
-            ["o","O", (service.pStarsSort == "o")],
-            ["p","P", (service.pStarsSort == "p")],
-            ["r","R", (service.pStarsSort == "r")],
-            ["s","S", (service.pStarsSort == "s")],
-            ["t","T", (service.pStarsSort == "t")],
-            ["u","U", (service.pStarsSort == "u")],
-            ["v","V", (service.pStarsSort == "v")],
-            ["w","W", (service.pStarsSort == "w")],
-            ["x","X", (service.pStarsSort == "x")],
-            ["y","Y", (service.pStarsSort == "y")],
-            ["z","Z", (service.pStarsSort == "z")]
+            ["","Any Name", (service.pStarsName == "")],
+            ["a","A", (service.pStarsName == "a")],
+            ["b","B", (service.pStarsName == "b")],
+            ["c","C", (service.pStarsName == "c")],
+            ["d","D", (service.pStarsName == "d")],
+            ["e","E", (service.pStarsName == "e")],
+            ["f","F", (service.pStarsName == "f")],
+            ["g","G", (service.pStarsName == "g")],
+            ["h","H", (service.pStarsName == "h")],
+            ["i","I", (service.pStarsName == "i")],
+            ["j","J", (service.pStarsName == "j")],
+            ["k","K", (service.pStarsName == "k")],
+            ["l","L", (service.pStarsName == "l")],
+            ["m","M", (service.pStarsName == "m")],
+            ["n","N", (service.pStarsName == "n")],
+            ["o","O", (service.pStarsName == "o")],
+            ["p","P", (service.pStarsName == "p")],
+            ["r","R", (service.pStarsName == "r")],
+            ["s","S", (service.pStarsName == "s")],
+            ["t","T", (service.pStarsName == "t")],
+            ["u","U", (service.pStarsName == "u")],
+            ["v","V", (service.pStarsName == "v")],
+            ["w","W", (service.pStarsName == "w")],
+            ["x","X", (service.pStarsName == "x")],
+            ["y","Y", (service.pStarsName == "y")],
+            ["z","Z", (service.pStarsName == "z")]
         ];
-        page.options.createMultiOpt("pStarsName", "Filter name by", sortOptions, function(v) {
+        page.options.createMultiOpt("pStarsName", "Filter pornstar names by", sortOptions, function(v) {
             service.pStarsName = v;
+		});
+	}
+	
+    function setChannelsPageOptions(page) {
+        var sortOptions = [
+            ["","Videos",                 (service.channelsSort == "")],
+            ["name","Name",               (service.channelsSort == "name")],
+            ["date","Date added",         (service.channelsSort == "date")],
+            ["subscribers","Subscribers", (service.channelsSort == "subscribers")],
+            ["likes","Likes",             (service.channelsSort == "likes")]
+        ];
+        page.options.createMultiOpt("channelsSort", "Sort by", sortOptions, function(v) {
+            service.channelsSort = v;
+		});
+
+        var sortOptions = [
+            ["","Any Name", (service.channelsName == "")],
+            ["a","A", (service.channelsName == "a")],
+            ["b","B", (service.channelsName == "b")],
+            ["c","C", (service.channelsName == "c")],
+            ["d","D", (service.channelsName == "d")],
+            ["e","E", (service.channelsName == "e")],
+            ["f","F", (service.channelsName == "f")],
+            ["g","G", (service.channelsName == "g")],
+            ["h","H", (service.channelsName == "h")],
+            ["i","I", (service.channelsName == "i")],
+            ["j","J", (service.channelsName == "j")],
+            ["k","K", (service.channelsName == "k")],
+            ["l","L", (service.channelsName == "l")],
+            ["m","M", (service.channelsName == "m")],
+            ["n","N", (service.channelsName == "n")],
+            ["o","O", (service.channelsName == "o")],
+            ["p","P", (service.channelsName == "p")],
+            ["r","R", (service.channelsName == "r")],
+            ["s","S", (service.channelsName == "s")],
+            ["t","T", (service.channelsName == "t")],
+            ["u","U", (service.channelsName == "u")],
+            ["v","V", (service.channelsName == "v")],
+            ["w","W", (service.channelsName == "w")],
+            ["x","X", (service.channelsName == "x")],
+            ["y","Y", (service.channelsName == "y")],
+            ["z","Z", (service.channelsName == "z")]
+        ];
+        page.options.createMultiOpt("channelsName", "Filter channel names by", sortOptions, function(v) {
+            service.channelsName = v;
 		});
 	}
 	
@@ -164,10 +219,11 @@
         var re = /\((\d+), \d+, \[(\d+),/;
         var matchInfo = re.exec(doc);
         var mediaID  = matchInfo[1];
-        var bestQual = matchInfo[2];
-        var tempUrl  = "http://tkn.4tube.com/" + mediaID + "/desktop/" + bestQual;
+        var playQual = matchInfo[2];
+        if (playQual > eval(settings.maxVideoRes)) playQual = settings.maxVideoRes
+        var tempUrl  = "http://tkn.4tube.com/" + mediaID + "/desktop/" + playQual;
         var doc = showtime.httpReq(tempUrl, {
-            debug: true,
+            debug: false,
             method: "POST",
             headers: {
                 "Accept": "application/json, text/javascript, */*; q=0.01",
@@ -215,8 +271,20 @@
 
     // Pornstars page
     plugin.addURI(plugin.getDescriptor().id + ":pornstars", function(page) {
-        setPageHeader(page, plugin.getDescriptor().id + " - Pornstars -  Filter: " + serive.pStarsName + " " + service.pStarsSort);
+        setPageHeader(page, plugin.getDescriptor().id + " - Pornstars -  Filter: " + service.pStarsName + " " + service.pStarsSort);
         indexPornstars(page);
+    });
+
+    // Channel page
+    plugin.addURI(plugin.getDescriptor().id + ":channel:(.*):(.*)", function(page, url, title) {
+        setPageHeader(page, plugin.getDescriptor().id + " - " + unescape(title) + " -  Filter: " + service.sort + " " + service.quality + " " + service.duration + " " + service.time);
+        index(page, url);
+    });
+
+    // Channels page
+    plugin.addURI(plugin.getDescriptor().id + ":channels", function(page) {
+        setPageHeader(page, plugin.getDescriptor().id + " - Channels -  Filter: " + service.channelsName + " " + service.channelsSort);
+        indexChannels(page);
     });
 
     // Main page
@@ -325,6 +393,66 @@
 				var doc = showtime.httpReq(url).toString();
 				page.loading = false;
 				scraper(doc.match(/pornstars_page([\S\s]*?)"pagination"/)[1]);
+				var next = doc.match(/<li><a href="(http.*?)" id="next" /);
+				if (!next) return tryToSearch = false;
+				url = next[1];
+				return true;
+			}
+        }
+        loader();
+        page.paginator = loader;
+    }
+
+    function indexChannels(page) {
+        setChannelsPageOptions(page);
+        var url = "/channels";
+        // add filter and sorting
+        if (service.channelsName != "") url += "/" + service.channelsName;
+        if (service.channelsSort != "") url += "?sort=" + service.channelsSort;
+
+        page.loading = true;
+        page.entries = 0;
+        var tryToSearch = true;
+
+        function scraper(doc) {
+        //                                1-link             2-title                             3-videos                              4-icon,
+            var re = /"thumb-link" href="([\S\s]*?)" title="([\S\s]*?)"[\S\s]*?icon-video"><\/i>([\S\s]*?)<[\S\s]*?img data-original="([\S\s]*?)"/g;
+            var match = re.exec(doc);
+
+			while (match) {
+				page.appendItem(plugin.getDescriptor().id + ":channel:" + escape(match[1]) + ":" + escape(match[2]), "video", {
+					title: new showtime.RichText(match[2] + colorStr(match[3], orange)),
+					icon: match[4]
+//					description: new showtime.RichText(coloredStr("Twitter: ", orange) + match[4])
+				});
+				page.entries++;
+				match = re.exec(doc);
+			}
+        }
+
+        function loader() {
+            if (!tryToSearch) return false;
+            page.loading = true;
+
+            url = checkLink(url);
+            var probe = showtime.probe(url);
+            
+            if (probe.result != 0) {
+				page.appendItem("", "separator", {
+					title: "- No Results -"
+				});
+				page.appendPassiveItem("file", "", {
+					title: "Change filter settings and reload page"
+				});
+                page.entries++;
+				page.loading = false;
+				return tryToSearch = false;
+			}
+			else
+			{
+				var doc = showtime.httpReq(url).toString();
+				page.loading = false;
+				scraper(doc.match(/channels_page([\S\s]*?)"pagination"/)[1]);
 				var next = doc.match(/<li><a href="(http.*?)" id="next" /);
 				if (!next) return tryToSearch = false;
 				url = next[1];
