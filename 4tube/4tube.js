@@ -464,12 +464,18 @@
     }
 
     function index(page, url) {
-        setPageOptions(page);
-        // add filters
-        url += "?sort=" + service.sort;
-        if (service.duration != "") url += "&duration=" + service.duration;
-        if (service.time     != "") url += "&time="     + service.time;
-        if (service.quality  != "") url += "&quality="  + service.quality;
+        // If searcher, do not add options 
+        if (url.indexOf("?")>-1)
+           url += "&sort=" + service.sort;
+        else
+        {
+           setPageOptions(page);
+           // add filters
+           url += "?sort=" + service.sort;
+           if (service.duration != "") url += "&duration=" + service.duration;
+           if (service.time     != "") url += "&time="     + service.time;
+           if (service.quality  != "") url += "&quality="  + service.quality;
+	   }
 
         page.loading = true;
         page.entries = 0;
