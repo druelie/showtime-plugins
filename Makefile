@@ -1,6 +1,7 @@
 
 PLUGINS= \
-	4tube.zip
+	4tube.zip \
+        Mediatheken.zip
 %.zip:
 	@echo "Bundle plugin '$*'"
 	@rm -f ./plugins/$*.zip
