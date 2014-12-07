@@ -56,7 +56,7 @@ widget(container_y, {
 						.focusOnClick = true;
 						.padding = $view.sizer * -1.5 * iir(isHovered() || isFocused(), 3) + $view.sizer * iir(isPressed(), 3);
 
-						onEvent(activate, playTrackFromSource($self, $parent.model));
+						onEvent(activate, navOpen($self.url, void, void, $parent.model));
 
 						widget(container_y, {
 							.spacing = 5;
