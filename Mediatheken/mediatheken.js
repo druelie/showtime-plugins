@@ -17,11 +17,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+var XML = require('showtime/xml');
+
 (function(plugin) {
     var pInfo = plugin.getDescriptor();
     var PREFIX = pInfo.id;
     var logo = plugin.path + 'mediatheken.png';
-    var BASE_URL = 'http://www.di.fm';
 
     plugin.createService(pInfo.title, PREFIX + ':start', 'video', true, logo);
 
@@ -108,7 +109,7 @@
  	    page.appendItem(vp.videoJsonPlayer.VSR.HTTP_MP4_SQ_1.url, 'video', {
 		station:     json.videos[i].title,
 		title:       json.videos[i].title,
-		description: vp.videoJsonPlayer.VDE + '\n\nVerfügbar bis: ' + json.videos[i].airdate_long,
+		description: vp.videoJsonPlayer.VDE + '\n\nVerfügbar seit: ' + json.videos[i].airdate_long,
 		icon:        json.videos[i].image_url,
 		album_art:   json.videos[i].image_url,
 		album:       json.videos[i].video_channels,
@@ -120,4 +121,55 @@
 	};
         page.loading = false;
     });
+
+    // 3sat page
+    plugin.addURI(PREFIX + ':3sat', function(page) {
+        var BASE_URL = 'http://www.3sat.de/mediathek/rss/';
+	page.type = 'directory';
+	page.metadata.glwview = plugin.path + 'views/array.view';
+	page.contents = 'items';
+	page.metadata.logo = logo;
+	page.metadata.title = pInfo.title;
+        page.loading = true;
+	var doc = unescape(showtime.httpReq(BASE_URL+'mediathek.xml').toString());
+            doc = doc.replace(/media:/g,"media_");
+
+        var item = doc.match(/<item>([\S\s]*?)<\/item>/g);
+showtime.print("description: "+item[0].match(/<description>([\S\s]*?)<\/description>/)[1]);
+
+        for (var i=0; i < item.length; i++) {
+            var video_url = item[i].match(/<enclosure url="([\S\s]*?)"/)[1];
+            var object    = item[i].match(/obj=([\S\s]*?)</)[1];
+            var title     = item[i].match(/<title>([\S\s]*?)<\/title>/)[1];
+
+ 	    page.appendItem(PREFIX + ':3sat:play:' + object + ':' + escape(title), 'video', {
+		station:     title,
+		title:       title,
+		description: item[i].match(/<description>([\S\s]*?)<\/description>/)[1],
+		icon:        item[i].match(/thumbnail url="([\S\s]*?)"/)[1],
+		album_art:   item[i].match(/thumbnail url="([\S\s]*?)"/)[1],
+		album:       '',
+		duration:    item[i].match(/duration="([\S\s]*?)"/)[1]/60,
+                genre:       ''//item[i].match(/category>([\S\s]*?)</)[1]
+	    });
+	};
+        page.loading = false;
+    });
+
+    // Play 3sat videolink
+    plugin.addURI(PREFIX + ':3sat:play:(.*):(.*)', function(page, object, title) {
+        page.loading = true;
+        var doc = showtime.httpReq('http://www.3sat.de/mediathek/xmlservice/web/beitragsDetails?id=' + object).toString();
+        var videoUrl = doc.match(/<formitaet basetype="h264_aac_mp4_http_na_na" isDownload="false">\n<quality>veryhigh<\/quality>\n<url>(http:\/\/nrodl[\S\s]*?mp4)</)[1];
+        page.loading = false;
+        page.type = "video";
+        page.source = "videoparams:" + showtime.JSONEncode({
+            title: unescape(title),
+            canonicalUrl: PREFIX + ":3sat:play:" + object + ":" + title,
+            sources: [{
+                url: videoUrl
+            }]
+        });
+    });
+
 })(this);
