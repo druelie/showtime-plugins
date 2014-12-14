@@ -90,16 +90,21 @@ var XML = require('showtime/xml');
         page.loading = false;
     });
 
+    // make HTML code strings readable
+    function noHtmlCode(inString) {
+        return inString.replace(/&quot;/g,'"').replace(/&apos;/,"'").replace(/&amp;/,'&').replace(/&gt;/,'>').replace(/&lt;/,'<'); 
+    }
+
     // arte page
     plugin.addURI(PREFIX + ':arte', function(page) {
         var BASE_URL = 'http://www.arte.tv';
-	page.type = 'directory';
-	page.metadata.glwview = plugin.path + 'views/array.view';
-	page.contents = 'items';
-	page.metadata.logo = logo;
-	page.metadata.title = pInfo.title;
+	    page.type = 'directory';
+	    page.metadata.glwview = plugin.path + 'views/array.view';
+	    page.contents = 'items';
+	    page.metadata.logo = logo;
+	    page.metadata.title = 'arte +7';
         page.loading = true;
-	var doc = showtime.httpReq(BASE_URL+'/guide/de/plus7.json').toString();
+	    var doc = showtime.httpReq(BASE_URL+'/guide/de/plus7.json').toString();
         var json = showtime.JSONDecode(doc);
 
         for (var i in json.videos) {
@@ -107,16 +112,16 @@ var XML = require('showtime/xml');
             var vp = showtime.JSONDecode(showtime.httpReq(arte_vp_url).toString());
 
  	    page.appendItem(vp.videoJsonPlayer.VSR.HTTP_MP4_SQ_1.url, 'video', {
-		station:     json.videos[i].title,
-		title:       json.videos[i].title,
-		description: vp.videoJsonPlayer.VDE + '\n\nVerfügbar seit: ' + json.videos[i].airdate_long,
-		icon:        json.videos[i].image_url,
-		album_art:   json.videos[i].image_url,
-		album:       json.videos[i].video_channels,
-		duration:    vp.videoJsonPlayer.VDU,
-		genre:       vp.videoJsonPlayer.genre,
-                views:       vp.videoJsonPlayer.VVI,
-		rating:      vp.videoJsonPlayer.videoRank * 10
+		    station:     json.videos[i].title,
+		    title:       json.videos[i].title,
+		    description: vp.videoJsonPlayer.VDE + '\n\nVerfügbar seit: ' + json.videos[i].airdate_long,
+		    icon:        json.videos[i].image_url,
+		    album_art:   json.videos[i].image_url,
+		    album:       json.videos[i].video_channels,
+		    duration:    vp.videoJsonPlayer.VDU,
+		    genre:       vp.videoJsonPlayer.genre,
+            views:       vp.videoJsonPlayer.VVI,
+		    rating:      vp.videoJsonPlayer.videoRank * 10
 	    });
 	};
         page.loading = false;
@@ -124,39 +129,90 @@ var XML = require('showtime/xml');
 
     // 3sat page
     plugin.addURI(PREFIX + ':3sat', function(page) {
-        var BASE_URL = 'http://www.3sat.de/mediathek/rss/';
-	page.type = 'directory';
-	page.metadata.glwview = plugin.path + 'views/array.view';
-	page.contents = 'items';
-	page.metadata.logo = logo;
-	page.metadata.title = pInfo.title;
+        page.type = 'directory';
+        page.metadata.glwview = plugin.path + 'views/array.view';
+        page.contents = 'items';
+        page.metadata.logo = logo;
+        page.metadata.title = '3sat Mediathek';
         page.loading = true;
-	var doc = unescape(showtime.httpReq(BASE_URL+'mediathek.xml').toString());
+
+        page.appendItem(PREFIX + ":3sat:sendungen", "directory", {
+            title:   "Sendungen",
+            station: "Sendungen",
+        });
+
+        var xmlUrl = 'http://www.3sat.de/mediathek/rss/mediathek.xml';
+        indexVideosFromXml(page, xmlUrl);
+        page.loading = false;
+    });
+
+    function indexVideosFromXml(page, xmlUrl) {
+        var doc = unescape(showtime.httpReq(xmlUrl).toString());
             doc = doc.replace(/media:/g,"media_");
 
         var item = doc.match(/<item>([\S\s]*?)<\/item>/g);
-showtime.print("description: "+item[0].match(/<description>([\S\s]*?)<\/description>/)[1]);
 
         for (var i=0; i < item.length; i++) {
             var video_url = item[i].match(/<enclosure url="([\S\s]*?)"/)[1];
             var object    = item[i].match(/obj=([\S\s]*?)</)[1];
-            var title     = item[i].match(/<title>([\S\s]*?)<\/title>/)[1];
+            var title     = noHtmlCode(item[i].match(/<title>([\S\s]*?)<\/title>/)[1]);
+            var descr     = noHtmlCode(item[i].match(/<description>([\S\s]*?)<\/description>/)[1]);
+            var icon      = item[i].match(/thumbnail url="([\S\s]*?)"/)[1];
 
- 	    page.appendItem(PREFIX + ':3sat:play:' + object + ':' + escape(title), 'video', {
-		station:     title,
-		title:       title,
-		description: item[i].match(/<description>([\S\s]*?)<\/description>/)[1],
-		icon:        item[i].match(/thumbnail url="([\S\s]*?)"/)[1],
-		album_art:   item[i].match(/thumbnail url="([\S\s]*?)"/)[1],
-		album:       '',
-		duration:    item[i].match(/duration="([\S\s]*?)"/)[1]/60,
+     	    page.appendItem(PREFIX + ':3sat:play:' + object + ':' + escape(title), 'video', {
+		        station:     title,
+		        title:       title,
+		        description: descr,
+		        icon:        icon,
+		        album_art:   icon,
+		        album:       '',
+		        duration:    item[i].match(/duration="([\S\s]*?)"/)[1]/60,
                 genre:       ''//item[i].match(/category>([\S\s]*?)</)[1]
-	    });
-	};
+            });
+	    };
+    }
+
+    // 3sat Sendungen
+    plugin.addURI(PREFIX + ':3sat:sendungen', function(page) {
+        page.type = 'directory';
+        page.metadata.glwview = plugin.path + 'views/array.view';
+        page.contents = 'items';
+        page.metadata.logo = logo;
+        page.metadata.title = 'Sendungen';
+        page.loading = true;
+
+        var SNDN_URL = 'http://www.3sat.de/page/?source=/specials/133576/index.html';
+        var doc = unescape(showtime.httpReq(SNDN_URL).toString());
+
+        var sendung = doc.match(/\/mediaplayer\/rss\/mediathek_([\S\s]*?)xml/g);
+        
+        for (var i=0; i < sendung.length; i++) {
+            var sTitle = sendung[i].match(/mediathek_([\S\s]*?).xml/)[1];
+            var cTitle = sTitle.charAt(0).toUpperCase() + sTitle.slice(1);
+     	    page.appendItem(PREFIX + ':3sat:sendung:' + sTitle, 'video', {
+		        station:     cTitle,
+		        title:       cTitle
+            });
+	    };
+        
         page.loading = false;
     });
 
-    // Play 3sat videolink
+    // 3sat Sendung Videos
+    plugin.addURI(PREFIX + ':3sat:sendung:(.*)', function(page, sendung) {
+        page.type = 'directory';
+        page.metadata.glwview = plugin.path + 'views/array.view';
+        page.contents = 'items';
+        page.metadata.title = sendung;
+        page.loading = true;
+        
+        var xmlUrl = 'http://www.3sat.de/mediaplayer/rss/mediathek_' + sendung + '.xml';
+        indexVideosFromXml(page, xmlUrl);
+        page.loading = false;
+    });
+
+
+    // 3sat play videolink
     plugin.addURI(PREFIX + ':3sat:play:(.*):(.*)', function(page, object, title) {
         page.loading = true;
         var doc = showtime.httpReq('http://www.3sat.de/mediathek/xmlservice/web/beitragsDetails?id=' + object).toString();
