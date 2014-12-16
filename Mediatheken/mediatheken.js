@@ -95,6 +95,123 @@ var XML = require('showtime/xml');
         return inString.replace(/&quot;/g,'"').replace(/&apos;/,"'").replace(/&amp;/,'&').replace(/&gt;/,'>').replace(/&lt;/,'<'); 
     }
 
+    // ARD main page
+    plugin.addURI(PREFIX + ':ard', function(page) {
+        var BASE_URL = 'http://www.ardmediathek.de/tv';
+	    page.type = 'directory';
+//	    page.metadata.glwview = plugin.path + 'views/array.view';
+	    page.contents = 'items';
+	    page.metadata.logo = logo;
+	    page.metadata.title = 'ARD Mediathek - Sendungen A-Z';
+        page.loading = true;
+	    var doc = showtime.httpReq(BASE_URL).toString();
+        var item = doc.match(/<a href="\/tv\/sendungen-a-z\?buchstabe=.*?">/g);
+
+        for (var i=0; i < item.length; i++) {
+            var letter = item[i].match(/buchstabe=(.*?)"/)[1];
+            page.appendItem(PREFIX + ':ard:sendungen_a_z:' + letter, 'directory', {
+		        station:     letter,
+		        title:       letter
+	        });
+    	};
+        page.loading = false;
+    });
+    
+    // ARD Sendungen A-Z page
+    plugin.addURI(PREFIX + ':ard:sendungen_a_z:(.*)', function(page, letter) {
+        var BASE_URL = 'http://www.ardmediathek.de';
+        var URL      = BASE_URL + '/tv/sendungen-a-z?buchstabe=' + letter;
+	    page.type = 'directory';
+	    page.metadata.glwview = plugin.path + 'views/array.view';
+	    page.contents = 'items';
+	    page.metadata.logo = logo;
+	    page.metadata.title = 'ARD Mediathek - Sendungen ' + letter;
+        page.loading = true;
+        page.entries = 0;
+	    var doc = showtime.httpReq(URL).toString();
+	        doc = doc.match(/data-ctrl-layoutable([\S\s]*?)modSocialbar/)[1];
+	    //                                     1-sUrl              2-icon                                          3-numVids                             4-title                      5-desc
+	    var re = /"media mediaA"[\S\s]*?href="([\S\s]*?)"[\S\s]*?;(\/image\/[\S\s]*?)##width##[\S\s]*?"dachzeile">([\S\s]*?) Ausgabe[\S\s]*?"headline">([\S\s]*?)<[\S\s]*?"subtitle">([\S\s]*?)</g;
+        var match = re.exec(doc);
+        while (match) {
+            var title   = match[4] + ' - ' + match[5];
+            var iconUrl = BASE_URL + match[2] + '256';
+            page.appendItem(PREFIX + ':ard:sendung:' + escape(match[1]) + ':' + escape(match[4]), 'video', {
+		        station:     title,
+		        title:       title,
+		        description: 'Ausgaben: ' + match[3],
+		        icon:        iconUrl,
+		        album_art:   iconUrl
+	        });
+			page.entries++;
+			match = re.exec(doc);
+    	};
+        page.loading = false;
+    });
+    
+    // ARD Sendung
+    plugin.addURI(PREFIX + ':ard:sendung:(.*):(.*)', function(page, sUrl, title) {
+        var BASE_URL = 'http://www.ardmediathek.de';
+        var URL      = BASE_URL + unescape(sUrl) + '&rss=true';
+	    page.type = 'directory';
+	    page.metadata.glwview = plugin.path + 'views/array.view';
+	    page.contents = 'items';
+	    page.metadata.logo = logo;
+	    page.metadata.title = 'ARD Mediathek - Sendung: ' + unescape(title);
+        page.loading = true;
+        page.entries = 0;
+	    var doc = showtime.httpReq(URL).toString();
+        var item = doc.match(/<item>([\S\s]*?)<\/item>/g);
+
+        for (var i=0; i < item.length; i++) {
+            var docId = item[i].match(/documentId=([\S\s]*?)&/)[1];
+            var title = noHtmlCode(item[i].match(/<title>[\S\s]*?- ([\S\s]*?)<\/title>/)[1]);
+            var descr = item[i].match(/<description>([\S\s]*?)<\/description>/)[1];
+                descr = descr.match(/\/&gt;&lt;\/p&gt;&lt;p&gt;([\S\s]*?)&lt;\/p&gt;&lt;p&gt;/)[1];
+            var icon  = item[i].match(/img src="([\S\s]*?)"/)[1];
+            // Skip live videos in future (they have no duration)
+            if ( item[i].match(/\| ([\S\s]*?) Min. \|/) ) {
+                var dura  = item[i].match(/\| ([\S\s]*?) Min. \|/)[1];
+                if ( item[i].match(/<category>/) )
+                    var categ = noHtmlCode(item[i].match(/<category>([\S\s]*?)<\/category>/)[1]);
+
+         	    page.appendItem(PREFIX + ':ard:play:' + docId + ':' + escape(title), 'video', {
+		            station:     title,
+		            title:       title,
+		            description: descr,//.match(//)[1],
+		            icon:        icon,
+		            album_art:   icon,
+		            album:       '',
+		            duration:    dura,
+                    genre:       categ
+                });
+                page.entries++;
+            }
+	    };
+        page.loading = false;
+    });
+    
+    // ARD play videolink
+    plugin.addURI(PREFIX + ':ard:play:(.*):(.*)', function(page, docId, title) {
+        page.loading = true;
+        var vlUrl = 'http://www.ardmediathek.de/play/media/' + docId + '?devicetype=tv&features=flash';
+        var doc = showtime.httpReq(vlUrl).toString();
+        var videoUrl = doc.match(/"_quality":3[\S\s]*?"_stream":"([\S\s]*?)"/)[1];
+            videoUrl = videoUrl.replace(/\.webl\./,'.webxl.'); // 720p for Tagesschau!
+            videoUrl = videoUrl.replace(/_C.mp4/,'_X.mp4');    // 720p for br!
+        page.loading = false;
+        page.type = "video";
+        page.source = "videoparams:" + showtime.JSONEncode({
+            title: unescape(title),
+            canonicalUrl: PREFIX + ":ard:play:" + docId + ":" + title,
+            sources: [{
+                url: videoUrl
+            }]
+        });
+    });
+
+//===== a r t e =================================================================================================================
+
     // arte page
     plugin.addURI(PREFIX + ':arte', function(page) {
         var BASE_URL = 'http://www.arte.tv';
@@ -126,6 +243,8 @@ var XML = require('showtime/xml');
 	};
         page.loading = false;
     });
+
+//========= 3 s a t ==============================================================================================================
 
     // 3sat page
     plugin.addURI(PREFIX + ':3sat', function(page) {
@@ -216,7 +335,7 @@ var XML = require('showtime/xml');
     plugin.addURI(PREFIX + ':3sat:play:(.*):(.*)', function(page, object, title) {
         page.loading = true;
         var doc = showtime.httpReq('http://www.3sat.de/mediathek/xmlservice/web/beitragsDetails?id=' + object).toString();
-        var videoUrl = doc.match(/<formitaet basetype="h264_aac_mp4_http_na_na" isDownload="false">\n<quality>veryhigh<\/quality>\n<url>(http:\/\/nrodl[\S\s]*?mp4)</)[1];
+        var videoUrl = doc.match(/<formitaet basetype="h264_aac_mp4_http_na_na" isDownload="false">\n<quality>veryhigh<\/quality>\n<url>(http:\/\/.*?rodl[\S\s]*?mp4)</)[1];
         page.loading = false;
         page.type = "video";
         page.source = "videoparams:" + showtime.JSONEncode({
