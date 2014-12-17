@@ -194,11 +194,21 @@ var XML = require('showtime/xml');
     // ARD play videolink
     plugin.addURI(PREFIX + ':ard:play:(.*):(.*)', function(page, docId, title) {
         page.loading = true;
-        var vlUrl = 'http://www.ardmediathek.de/play/media/' + docId + '?devicetype=tv&features=flash';
+        var vlUrl = 'http://www.ardmediathek.de/play/media/' + docId + '?devicetype=pc&features=flash';
         var doc = showtime.httpReq(vlUrl).toString();
-        var videoUrl = doc.match(/"_quality":3[\S\s]*?"_stream":"([\S\s]*?)"/)[1];
-            videoUrl = videoUrl.replace(/\.webl\./,'.webxl.'); // 720p for Tagesschau!
-            videoUrl = videoUrl.replace(/_C.mp4/,'_X.mp4');    // 720p for br!
+        var videoUrl = '';
+        if      (doc.indexOf('_quality":3') > -1) videoUrl = doc.match(/"_quality":3[\S\s]*?"_stream":"([\S\s]*?)"/)[1];
+        else if (doc.indexOf('_quality":2') > -1) videoUrl = doc.match(/"_quality":2[\S\s]*?"_stream":"([\S\s]*?)"/)[1];
+        else if (doc.indexOf('_quality":1') > -1) videoUrl = doc.match(/"_quality":1[\S\s]*?"_stream":"([\S\s]*?)"/)[1];
+        else                                      videoUrl = doc.match(/"_quality":[\S\s]*?"_stream":"([\S\s]*?)"/)[1];
+        
+        var probeUrl = videoUrl.replace(/\.webl\./,'.webxl.'); // 720p for Tagesschau!
+            probeUrl = probeUrl.replace(/_C.mp4/,'_X.mp4');    // 720p for br!
+        if (showtime.probe(probeUrl).result === 0)
+            videoUrl = probeUrl;
+            
+        if (videoUrl.indexOf("manifest.f4m") > -1) videoUrl += '?g=FLZJZTTPKFNJ&hdcore=3.4.0&plugin=aasp-3.4.0.132.66'; // fix alfa centauri?
+        showtime.print("Video URL: " + videoUrl);
         page.loading = false;
         page.type = "video";
         page.source = "videoparams:" + showtime.JSONEncode({
