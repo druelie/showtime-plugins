@@ -154,7 +154,7 @@ var XML = require('showtime/xml');
         var BASE_URL = 'http://www.ardmediathek.de';
         var URL      = BASE_URL + unescape(sUrl) + '&rss=true';
 	    page.type = 'directory';
-	    page.metadata.glwview = plugin.path + 'views/array.view';
+//	    page.metadata.glwview = plugin.path + 'views/array.view';
 	    page.contents = 'items';
 	    page.metadata.logo = logo;
 	    page.metadata.title = 'ARD Mediathek - Sendung: ' + unescape(title);
@@ -164,20 +164,23 @@ var XML = require('showtime/xml');
         var item = doc.match(/<item>([\S\s]*?)<\/item>/g);
 
         for (var i=0; i < item.length; i++) {
-            var docId = item[i].match(/documentId=([\S\s]*?)&/)[1];
-            var title = noHtmlCode(item[i].match(/<title>[\S\s]*?- ([\S\s]*?)<\/title>/)[1]);
-            var descr = item[i].match(/<description>([\S\s]*?)<\/description>/)[1];
-                descr = descr.match(/\/&gt;&lt;\/p&gt;&lt;p&gt;([\S\s]*?)&lt;\/p&gt;&lt;p&gt;/)[1];
-            var icon  = item[i].match(/img src="([\S\s]*?)"/)[1];
+            var docId  = item[i].match(/documentId=([\S\s]*?)&/)[1];
+            var vTitle = noHtmlCode(item[i].match(/<title>([\S\s]*?)<\/title>/)[1]);
+                vTitle = vTitle.slice(unescape(title).length+3); // remove overall title
+            var descr  = item[i].match(/<description>([\S\s]*?)<\/description>/)[1];
+                descr  = descr.match(/\/&gt;&lt;\/p&gt;&lt;p&gt;([\S\s]*?) \|/)[1];
+                descr  = descr.replace(/&lt;\/p&gt;&lt;p&gt;/,'\n\nVom: ');
+            var icon   = item[i].match(/img src="([\S\s]*?)"/)[1];
+            var pDate  = item[i].match(/<pubDate>([\S\s]*?)<\/pubDate>/)[1];
             // Skip live videos in future (they have no duration)
             if ( item[i].match(/\| ([\S\s]*?) Min. \|/) ) {
                 var dura  = item[i].match(/\| ([\S\s]*?) Min. \|/)[1];
                 if ( item[i].match(/<category>/) )
                     var categ = noHtmlCode(item[i].match(/<category>([\S\s]*?)<\/category>/)[1]);
 
-         	    page.appendItem(PREFIX + ':ard:play:' + docId + ':' + escape(title), 'video', {
-		            station:     title,
-		            title:       title,
+         	    page.appendItem(PREFIX + ':ard:play:' + docId + ':' + escape(vTitle), 'video', {
+		            station:     vTitle,
+		            title:       vTitle,
 		            description: descr,//.match(//)[1],
 		            icon:        icon,
 		            album_art:   icon,
@@ -202,12 +205,14 @@ var XML = require('showtime/xml');
         else if (doc.indexOf('_quality":1') > -1) videoUrl = doc.match(/"_quality":1[\S\s]*?"_stream":"([\S\s]*?)"/)[1];
         else                                      videoUrl = doc.match(/"_quality":[\S\s]*?"_stream":"([\S\s]*?)"/)[1];
         
+        // No direct video, but stream, so add stream server (not working)
+        if (videoUrl.indexOf('http') === -1) videoUrl = doc.match(/"_server":"([\S\s]*?)"/)[1] + '/' + videoUrl ;
+        
         var probeUrl = videoUrl.replace(/\.webl\./,'.webxl.'); // 720p for Tagesschau!
             probeUrl = probeUrl.replace(/_C.mp4/,'_X.mp4');    // 720p for br!
         if (showtime.probe(probeUrl).result === 0)
             videoUrl = probeUrl;
             
-        if (videoUrl.indexOf("manifest.f4m") > -1) videoUrl += '?g=FLZJZTTPKFNJ&hdcore=3.4.0&plugin=aasp-3.4.0.132.66'; // fix alfa centauri?
         showtime.print("Video URL: " + videoUrl);
         page.loading = false;
         page.type = "video";
