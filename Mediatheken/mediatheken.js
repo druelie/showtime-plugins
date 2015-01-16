@@ -92,8 +92,10 @@ var XML = require('showtime/xml');
 
     // make HTML code strings readable
     function noHtmlCode(inString) {
-        return inString.replace(/&quot;/g,'"').replace(/&apos;/,"'").replace(/&amp;/,'&').replace(/&gt;/,'>').replace(/&lt;/,'<'); 
+        return inString.replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&').replace(/&gt;/g,'>').replace(/&lt;/g,'<').replace(/&auml;/g,'ä').replace(/&Auml;/g,'Ä').replace(/&ouml;/g,'ö').replace(/&Ouml;/g,'Ö').replace(/&uuml;/g,'ü').replace(/&Uuml;/g,'Ü'); 
     }
+
+//===== A R D =================================================================================================================
 
     // ARD main page
     plugin.addURI(PREFIX + ':ard', function(page) {
@@ -225,6 +227,69 @@ var XML = require('showtime/xml');
         });
     });
 
+//===== Z D F =================================================================================================================
+
+    // ZDF main page
+    plugin.addURI(PREFIX + ':zdf', function(page) {
+	    page.type = 'directory';
+//	    page.metadata.glwview = plugin.path + 'views/array.view';
+	    page.contents = 'items';
+	    page.metadata.logo = logo;
+	    page.metadata.title = 'ZDF Mediathek - Sendungen A-Z';
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:ABC',  'directory', {station: 'ABC',  title: 'ABC'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:DEF',  'directory', {station: 'DEF',  title: 'DEF'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:GHI',  'directory', {station: 'GHI',  title: 'GHI'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:JKL',  'directory', {station: 'JKL',  title: 'JKL'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:MNO',  'directory', {station: 'MNO',  title: 'MNO'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:PQRS', 'directory', {station: 'PQRS', title: 'PQRS'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:TUV',  'directory', {station: 'TUV',  title: 'TUV'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:WXYZ', 'directory', {station: 'WXYZ', title: 'WXYZ'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:0-9',  'directory', {station: '0-9',  title: '0-9'});
+    });
+    
+    // ZDF Sendungen A-Z page
+    plugin.addURI(PREFIX + ':zdf:sendungen_a_z:(.*)', function(page, letter) {
+        var BASE_URL = 'http://www.zdf.de';
+        var URL      = BASE_URL + '/ZDFmediathek/xmlservice/web/sendungenAbisZ?characterRangeStart=' + letter[0] + '&characterRangeEnd=' + letter[letter.length-1] + '&detailLevel=2';
+        if (letter === '0-9') 
+            URL = BASE_URL + '/ZDFmediathek/xmlservice/web/sendungenAbisZ?characterRangeStart=' + letter + '&characterRangeEnd=' + letter + '&detailLevel=2';
+	    page.type = 'directory';
+	    page.metadata.glwview = plugin.path + 'views/array.view';
+	    page.contents = 'items';
+	    page.metadata.logo = logo;
+	    page.metadata.title = 'ZDF Mediathek - Sendungen ' + letter;
+        page.loading = true;
+        page.entries = 0;
+	    var doc = showtime.httpReq(URL).toString();
+        var item = doc.match(/<teaser [\S\s]*?<\/teaser>/g);
+
+        for (var i=0; i < item.length; i++) {
+            var icon     = item[i].match(/<teaserimage[\S\s]*?key="173x120">([\S\s]*?)<\/teaserimage>/)[1];
+            var title    = item[i].match(/<title>([\S\s]*?)<\/title>/)[1];
+            var sTitle   = item[i].match(/<shortTitle>([\S\s]*?)<\/shortTitle>/)[1];
+            var descr    = item[i].match(/<detail>([\S\s]*?)<\/detail>/)[1];
+            var assetId  = item[i].match(/<assetId>([\S\s]*?)<\/assetId>/)[1];
+            var channel  = item[i].match(/<channel>([\S\s]*?)<\/channel>/)[1];
+            var duration = item[i].match(/<length>([\S\s]*?)<\/length>/)[1];
+
+            if ( item[i].match(/<category>/) )
+                var categ = noHtmlCode(item[i].match(/<category>([\S\s]*?)<\/category>/)[1]);
+
+     	    page.appendItem(PREFIX + ':zdf:sendung:' + assetId + ':' + escape(title), 'video', {
+	            station:     sTitle,
+	            title:       title,
+	            description: descr,
+	            icon:        icon,
+	            album_art:   icon,
+	            album:       '',
+	            duration:    duration,
+                genre:       channel
+            });
+            page.entries++;
+	    };
+        page.loading = false;
+    });
+    
 //===== a r t e =================================================================================================================
 
     // arte page
