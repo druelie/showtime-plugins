@@ -236,28 +236,26 @@ var XML = require('showtime/xml');
 	    page.contents = 'items';
 	    page.metadata.logo = logo;
 	    page.metadata.title = 'ZDF Mediathek - Sendungen A-Z';
-        page.appendItem(PREFIX + ':zdf:sendungen_a_z:ABC',  'directory', {station: 'ABC',  title: 'ABC'});
-        page.appendItem(PREFIX + ':zdf:sendungen_a_z:DEF',  'directory', {station: 'DEF',  title: 'DEF'});
-        page.appendItem(PREFIX + ':zdf:sendungen_a_z:GHI',  'directory', {station: 'GHI',  title: 'GHI'});
-        page.appendItem(PREFIX + ':zdf:sendungen_a_z:JKL',  'directory', {station: 'JKL',  title: 'JKL'});
-        page.appendItem(PREFIX + ':zdf:sendungen_a_z:MNO',  'directory', {station: 'MNO',  title: 'MNO'});
-        page.appendItem(PREFIX + ':zdf:sendungen_a_z:PQRS', 'directory', {station: 'PQRS', title: 'PQRS'});
-        page.appendItem(PREFIX + ':zdf:sendungen_a_z:TUV',  'directory', {station: 'TUV',  title: 'TUV'});
-        page.appendItem(PREFIX + ':zdf:sendungen_a_z:WXYZ', 'directory', {station: 'WXYZ', title: 'WXYZ'});
-        page.appendItem(PREFIX + ':zdf:sendungen_a_z:0-9',  'directory', {station: '0-9',  title: '0-9'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:A:C', 'directory', {station: 'ABC',  title: 'ABC'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:D:F', 'directory', {station: 'DEF',  title: 'DEF'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:G:I', 'directory', {station: 'GHI',  title: 'GHI'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:J:L', 'directory', {station: 'JKL',  title: 'JKL'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:M:O', 'directory', {station: 'MNO',  title: 'MNO'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:P:S', 'directory', {station: 'PQRS', title: 'PQRS'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:T:V', 'directory', {station: 'TUV',  title: 'TUV'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:W:Z', 'directory', {station: 'WXYZ', title: 'WXYZ'});
+        page.appendItem(PREFIX + ':zdf:sendungen_a_z:0-9:0-9', 'directory', {station: '0-9', title: '0-9'});
     });
     
     // ZDF Sendungen A-Z page
-    plugin.addURI(PREFIX + ':zdf:sendungen_a_z:(.*)', function(page, letter) {
+    plugin.addURI(PREFIX + ':zdf:sendungen_a_z:(.*):(.*)', function(page, start, end) {
         var BASE_URL = 'http://www.zdf.de';
-        var URL      = BASE_URL + '/ZDFmediathek/xmlservice/web/sendungenAbisZ?characterRangeStart=' + letter[0] + '&characterRangeEnd=' + letter[letter.length-1] + '&detailLevel=2';
-        if (letter === '0-9') 
-            URL = BASE_URL + '/ZDFmediathek/xmlservice/web/sendungenAbisZ?characterRangeStart=' + letter + '&characterRangeEnd=' + letter + '&detailLevel=2';
+        var URL      = BASE_URL + '/ZDFmediathek/xmlservice/web/sendungenAbisZ?characterRangeStart=' + start + '&characterRangeEnd=' + end + '&detailLevel=2';
 	    page.type = 'directory';
 	    page.metadata.glwview = plugin.path + 'views/array.view';
 	    page.contents = 'items';
 	    page.metadata.logo = logo;
-	    page.metadata.title = 'ZDF Mediathek - Sendungen ' + letter;
+	    page.metadata.title = 'ZDF Mediathek - Sendungen ' + start + ' bis ' + end;
         page.loading = true;
         page.entries = 0;
 	    var doc = showtime.httpReq(URL).toString();
@@ -288,6 +286,87 @@ var XML = require('showtime/xml');
             page.entries++;
 	    };
         page.loading = false;
+    });
+    
+    // ZDF Beiträge einer Sendung
+    plugin.addURI(PREFIX + ':zdf:sendung:(.*):(.*)', function(page, assetId, title) {
+        var BASE_URL = 'http://www.zdf.de';
+        var URL      = BASE_URL + '/ZDFmediathek/xmlservice/web/aktuellste?id=' + assetId + '&maxLength=50&offset=0';
+	    page.type = 'directory';
+//	    page.metadata.glwview = plugin.path + 'views/array.view';
+	    page.contents = 'items';
+	    page.metadata.logo = logo;
+	    page.metadata.title = 'ZDF Mediathek - Sendung: ' + unescape(title);
+        page.loading = true;
+        page.entries = 0;
+	    var doc = showtime.httpReq(URL).toString();
+        var item = doc.match(/<teaser>[\S\s]*?<\/teaser>/g);
+
+        for (var i=0; i < item.length; i++) {
+            var icon       = item[i].match(/<teaserimage[\S\s]*?key="173x120">([\S\s]*?)<\/teaserimage>/)[1];
+            var title      = item[i].match(/<title>([\S\s]*?)<\/title>/)[1];
+            var descr      = item[i].match(/<detail>([\S\s]*?)<\/detail>/)[1];
+            var assetId    = item[i].match(/<assetId>([\S\s]*?)<\/assetId>/)[1];
+            if (item[i].match(/<channel>/))
+                var channel = item[i].match(/<channel>([\S\s]*?)<\/channel>/)[1];
+            var duration   = item[i].match(/<length>([\S\s]*?)<\/length>/)[1];
+            if (item[i].match(/<airtime>/))
+                var airtime = item[i].match(/<airtime>([\S\s]*?)<\/airtime>/)[1];
+            if (item[i].match(/<timetolive>/))
+            {
+                var timetolive = item[i].match(/<timetolive>([\S\s]*?)<\/timetolive>/)[1];
+
+         	    page.appendItem(PREFIX + ':zdf:play:' + assetId + ':' + escape(title), 'video', {
+	                station:     title,
+	                title:       title,
+	                description: descr + '\n\n\nOnline seit: ' + airtime + '   -   Verfügbar bis: ' + timetolive,
+	                icon:        icon,
+	                album_art:   icon,
+	                album:       '',
+	                duration:    duration,
+                    genre:       channel
+                });
+            }
+            else
+            {
+         	    page.appendItem(PREFIX + ':zdf:sendung:' + assetId + ':' + escape(title), 'video', {
+	                station:     title,
+	                title:       title,
+	                description: descr + '\n\n\nOnline seit: ' + airtime,
+	                icon:        icon,
+	                album_art:   icon,
+	                album:       '',
+	                duration:    duration,
+                    genre:       channel
+                });
+            }
+            page.entries++;
+	    };
+        page.loading = false;
+    });
+    
+    // ZDF play videolink
+    plugin.addURI(PREFIX + ':zdf:play:(.*):(.*)', function(page, object, title) {
+        page.loading = true;
+        var doc = showtime.httpReq('http://www.zdf.de/ZDFmediathek/xmlservice/web/beitragsDetails?id=' + object).toString();
+        if (doc.match(/basetype="h264_aac_mp4_http_na_na"[\S\s]*?<quality>veryhigh<\/quality>[\S\s]*?<url>(.*?rodl[\S\s]*?mp4)<\/url>/))
+            var videoUrl = doc.match(/basetype="h264_aac_mp4_http_na_na"[\S\s]*?<quality>veryhigh<\/quality>[\S\s]*?<url>(.*?rodl[\S\s]*?mp4)<\/url>/)[1];
+        else
+            var videoUrl = doc.match(/h264_aac_mp4_http_na_na[\S\s]*?<quality>veryhigh<\/quality>[\S\s]*?<url>([\S\s]*?)<\/url>/)[1];
+        
+//        var probeUrl = videoUrl.replace(/1456k_p13v11/,'2328k_p35v11'); // better quality? no, flickering due to interlace!
+//        if (showtime.probe(probeUrl).result === 0)
+//            videoUrl = probeUrl;
+         
+        page.loading = false;
+        page.type = "video";
+        page.source = "videoparams:" + showtime.JSONEncode({
+            title: unescape(title),
+            canonicalUrl: PREFIX + ":zdf:play:" + object + ":" + title,
+            sources: [{
+                url: videoUrl
+            }]
+        });
     });
     
 //===== a r t e =================================================================================================================
