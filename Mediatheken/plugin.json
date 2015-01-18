@@ -4,7 +4,7 @@
 	"homepage": "https://github.com/druelie/showtime-plugins",
 	"title": "Mediatheken",
 	"synopsis": "Mediatheken von deutschen Fernsehsendern.",
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"file": "mediatheken.js",
 	"showtimeVersion": "4.5.25",
 	"type": "ecmascript",

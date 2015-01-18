@@ -139,8 +139,8 @@ var XML = require('showtime/xml');
             var title   = match[4] + ' - ' + match[5];
             var iconUrl = BASE_URL + match[2] + '256';
             page.appendItem(PREFIX + ':ard:sendung:' + escape(match[1]) + ':' + escape(match[4]), 'video', {
-		        station:     title,
-		        title:       title,
+		        station:     noHtmlCode(title),
+		        title:       noHtmlCode(title),
 		        description: 'Ausgaben: ' + match[3],
 		        icon:        iconUrl,
 		        album_art:   iconUrl
@@ -159,7 +159,7 @@ var XML = require('showtime/xml');
 //	    page.metadata.glwview = plugin.path + 'views/array.view';
 	    page.contents = 'items';
 	    page.metadata.logo = logo;
-	    page.metadata.title = 'ARD Mediathek - Sendung: ' + unescape(title);
+	    page.metadata.title = 'ARD Mediathek - Sendung: ' + noHtmlCode(unescape(title));
         page.loading = true;
         page.entries = 0;
 	    var doc = showtime.httpReq(URL).toString();
@@ -167,8 +167,8 @@ var XML = require('showtime/xml');
 
         for (var i=0; i < item.length; i++) {
             var docId  = item[i].match(/documentId=([\S\s]*?)&/)[1];
-            var vTitle = noHtmlCode(item[i].match(/<title>([\S\s]*?)<\/title>/)[1]);
-                vTitle = vTitle.slice(unescape(title).length+3); // remove overall title
+            var vTitle = item[i].match(/<title>([\S\s]*?)<\/title>/)[1];
+                vTitle = noHtmlCode(vTitle.slice(unescape(title).length+3)); // remove overall title
             var descr  = item[i].match(/<description>([\S\s]*?)<\/description>/)[1];
                 descr  = descr.match(/\/&gt;&lt;\/p&gt;&lt;p&gt;([\S\s]*?) \|/)[1];
                 descr  = descr.replace(/&lt;\/p&gt;&lt;p&gt;/,'\n\nVom: ');
@@ -369,6 +369,96 @@ var XML = require('showtime/xml');
         });
     });
     
+//===== N D R ===================================================================================================================
+
+    // NDR main page
+    plugin.addURI(PREFIX + ':ndr', function(page) {
+        var BASE_URL = 'http://www.ndr.de';
+	    page.type = 'directory';
+//	    page.metadata.glwview = plugin.path + 'views/array.view';
+	    page.contents = 'items';
+	    page.metadata.logo = logo;
+	    page.metadata.title = 'NDR Mediathek - Sendungen A-Z';
+        page.loading = true;
+	    var doc = showtime.httpReq(BASE_URL + '/mediathek/sendungen_a-z/index.html').toString();
+	        doc = doc.match(/<section([\S\s]*?)<\/section>/)[1];
+	    showtime.print('NDR doc: ' + doc);
+        var item = doc.match(/href=[\S\s]*?</g);
+
+        for (var i=0; i < item.length; i++) {
+            var url   = item[i].match(/href="([\S\s]*?)"/)[1];
+            var title = item[i].match(/"link_arrow">([\S\s]*?)</)[1];
+            page.appendItem(PREFIX + ':ndr:sendung:' + escape(url) + ':' + escape(title), 'directory', {
+		        station:     title,
+		        title:       title
+	        });
+    	};
+        page.loading = false;
+    });
+    
+    // NDR Sendung
+    plugin.addURI(PREFIX + ':ndr:sendung:(.*):(.*)', function(page, sUrl, title) {
+        var BASE_URL = 'http://www.ndr.de';
+        var URL      = BASE_URL + unescape(sUrl);
+	    page.type = 'directory';
+//	    page.metadata.glwview = plugin.path + 'views/array.view';
+	    page.contents = 'items';
+	    page.metadata.logo = logo;
+	    page.metadata.title = 'NDR Mediathek - Sendung: ' + unescape(title);
+        page.loading = true;
+        page.entries = 0;
+	    var doc = showtime.httpReq(URL).toString();
+	        doc = doc.match(/pagepadding([\S\s]*?)"footer"/)[1];
+        var item = doc.match(/<img src="[\S\s]*?\)<\/a>/g);
+
+        if (item) {
+            for (var i=0; i < item.length; i++) {
+                var vTitle = item[i].match(/title="Zum Video: [\S\s]*?>\n([\S\s]*?)\n<\/a>/)[1];
+                var vUrl   = item[i].match(/<a title="" href="([\S\s]*?)" class="/)[1];
+                var descr  = item[i].match(/<p>\n([\S\s]*?)\n<a title=/)[1];
+                var icon   = item[i].match(/img src="([\S\s]*?)"/)[1];
+                if (!icon.match(/http/)) icon = BASE_URL + icon;
+                var dura   = item[i].match(/>Video \(([\S\s]*?)\)</)[1];
+                if (item[i].match(/<div class="subline">([\S\s]*?)<\/div>/))
+                    var pDate = '\n\n\nSendung vom: ' + item[i].match(/<div class="subline">([\S\s]*?)<\/div>/)[1];
+                else
+                    var pDate = '';
+
+         	    page.appendItem(PREFIX + ':ndr:play:' + vUrl + ':' + escape(vTitle), 'video', {
+	                station:     vTitle,
+	                title:       vTitle,
+	                description: descr + pDate,
+	                icon:        icon,
+	                album_art:   icon,
+	                album:       '',
+	                duration:    dura,
+    //                genre:       categ
+                });
+                page.entries++;
+	        };
+	    }
+        page.loading = false;
+    });
+    
+    // NDR play videolink
+    plugin.addURI(PREFIX + ':ndr:play:(.*):(.*)', function(page, vUrl, title) {
+        var BASE_URL = 'http://www.ndr.de';
+        page.loading = true;
+        var doc = showtime.httpReq(BASE_URL + vUrl).toString();
+        var videoUrl = doc.match(/3: \{src:'([\S\s]*?)'/)[1];
+            
+        showtime.print("Video URL: " + videoUrl);
+        page.loading = false;
+        page.type = "video";
+        page.source = "videoparams:" + showtime.JSONEncode({
+            title: unescape(title),
+            canonicalUrl: PREFIX + ":ndr:play:" + vUrl + ":" + title,
+            sources: [{
+                url: videoUrl
+            }]
+        });
+    });
+
 //===== a r t e =================================================================================================================
 
     // arte page
