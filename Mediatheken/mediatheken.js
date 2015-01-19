@@ -63,30 +63,30 @@ var XML = require('showtime/xml');
         description: 'Mediathek von 3sat',
         icon: plugin.path + 'img/3sat.png'
     });
-        page.appendItem(PREFIX + ':rtl', 'directory', {
-        station: 'RTL now',
-        title: 'RTL now',
-        description: 'Mediathek von RTL',
-        icon: plugin.path + 'img/RTLnow_.png'
-    });
-        page.appendItem(PREFIX + ':sat1', 'directory', {
-        station: 'Sat.1',
-        title: 'Sat.1',
-        description: 'Mediathek von Sat.1',
-        icon: plugin.path + 'img/Sat.1.png'
-    });
-        page.appendItem(PREFIX + ':vox', 'directory', {
-        station: 'VOX now',
-        title: 'VOX now',
-        description: 'Mediathek von VOX',
-        icon: plugin.path + 'img/VOXnow.png'
-    });
-        page.appendItem(PREFIX + ':kabel1', 'directory', {
-        station: 'Kabel 1',
-        title: 'Kabel 1',
-        description: 'Mediathek von Kabel 1',
-        icon: plugin.path + 'img/Kabel_eins.png'
-    });
+//        page.appendItem(PREFIX + ':rtl', 'directory', {
+//        station: 'RTL now',
+//        title: 'RTL now',
+//        description: 'Mediathek von RTL',
+//        icon: plugin.path + 'img/RTLnow_.png'
+//    });
+//        page.appendItem(PREFIX + ':sat1', 'directory', {
+//        station: 'Sat.1',
+//        title: 'Sat.1',
+//        description: 'Mediathek von Sat.1',
+//        icon: plugin.path + 'img/Sat.1.png'
+//    });
+//        page.appendItem(PREFIX + ':vox', 'directory', {
+//        station: 'VOX now',
+//        title: 'VOX now',
+//        description: 'Mediathek von VOX',
+//        icon: plugin.path + 'img/VOXnow.png'
+//    });
+//        page.appendItem(PREFIX + ':kabel1', 'directory', {
+//        station: 'Kabel 1',
+//        title: 'Kabel 1',
+//        description: 'Mediathek von Kabel 1',
+//        icon: plugin.path + 'img/Kabel_eins.png'
+//    });
         page.loading = false;
     });
 
