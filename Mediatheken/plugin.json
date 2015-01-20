@@ -1,10 +1,10 @@
 {
-	"description": "<p>Deutsche Mediatheken<p>Videos auf Abruf aus den Mediatheken von deutschen Fernsehsendern.",
+	"description": "<p>Deutsche Mediatheken<p>Videos auf Abruf aus den Mediatheken von deutschen Fernsehsendern.<p>Weitere Sender werden folgen<p><p>Videos on demand of some German TV channels",
 	"author": "Michael Hansen, druelie",
 	"homepage": "https://github.com/druelie/showtime-plugins",
 	"title": "Mediatheken",
-	"synopsis": "Mediatheken von deutschen Fernsehsendern.",
-	"version": "0.0.9",
+	"synopsis": "Mediatheken von deutschen Fernsehsendern<p><p>Videos on demand of German TV channels",
+	"version": "0.1.0",
 	"file": "mediatheken.js",
 	"showtimeVersion": "4.5.25",
 	"type": "ecmascript",
