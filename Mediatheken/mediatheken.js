@@ -124,7 +124,7 @@ var XML = require('showtime/xml');
         var BASE_URL = 'http://www.ardmediathek.de';
         var URL      = BASE_URL + '/tv/sendungen-a-z?buchstabe=' + letter;
         page.type = 'directory';
-        page.metadata.glwview = plugin.path + 'views/array.view';
+//        page.metadata.glwview = plugin.path + 'views/array.view';
         page.contents = 'items';
         page.metadata.logo = logo;
         page.metadata.title = 'ARD Mediathek - Sendungen ' + letter;
@@ -165,34 +165,36 @@ var XML = require('showtime/xml');
         var doc = showtime.httpReq(URL).toString();
         var item = doc.match(/<item>([\S\s]*?)<\/item>/g);
 
-        for (var i=0; i < item.length; i++) {
-            var docId  = item[i].match(/documentId=([\S\s]*?)&/)[1];
-            var vTitle = item[i].match(/<title>([\S\s]*?)<\/title>/)[1];
-                vTitle = noHtmlCode(vTitle.slice(unescape(title).length+3)); // remove overall title
-            var descr  = item[i].match(/<description>([\S\s]*?)<\/description>/)[1];
-                descr  = descr.match(/\/&gt;&lt;\/p&gt;&lt;p&gt;([\S\s]*?) \|/)[1];
-                descr  = descr.replace(/&lt;\/p&gt;&lt;p&gt;/,'\n\nVom: ');
-            var icon   = item[i].match(/img src="([\S\s]*?)"/)[1];
-            var pDate  = item[i].match(/<pubDate>([\S\s]*?)<\/pubDate>/)[1];
-            // Skip live videos in future (they have no duration)
-            if ( item[i].match(/\| ([\S\s]*?) Min. \|/) ) {
-                var dura  = item[i].match(/\| ([\S\s]*?) Min. \|/)[1];
-                if ( item[i].match(/<category>/) )
-                    var categ = noHtmlCode(item[i].match(/<category>([\S\s]*?)<\/category>/)[1]);
+        if (item) {
+            for (var i=0; i < item.length; i++) {
+                var docId  = item[i].match(/documentId=([\S\s]*?)&/)[1];
+                var vTitle = item[i].match(/<title>([\S\s]*?)<\/title>/)[1];
+                    vTitle = noHtmlCode(vTitle.slice(unescape(title).length+3)); // remove overall title
+                var descr  = item[i].match(/<description>([\S\s]*?)<\/description>/)[1];
+                    descr  = descr.match(/\/&gt;&lt;\/p&gt;&lt;p&gt;([\S\s]*?) \|/)[1];
+                    descr  = descr.replace(/&lt;\/p&gt;&lt;p&gt;/,'\n\nVom: ');
+                var icon   = item[i].match(/img src="([\S\s]*?)"/)[1];
+                var pDate  = item[i].match(/<pubDate>([\S\s]*?)<\/pubDate>/)[1];
+                // Skip live videos in future (they have no duration)
+                if ( item[i].match(/\| ([\S\s]*?) Min. \|/) ) {
+                    var dura  = item[i].match(/\| ([\S\s]*?) Min. \|/)[1];
+                    if ( item[i].match(/<category>/) )
+                        var categ = noHtmlCode(item[i].match(/<category>([\S\s]*?)<\/category>/)[1]);
 
-                 page.appendItem(PREFIX + ':ard:play:' + docId + ':' + escape(vTitle), 'video', {
-                    station:     vTitle,
-                    title:       vTitle,
-                    description: descr,//.match(//)[1],
-                    icon:        icon,
-                    album_art:   icon,
-                    album:       '',
-                    duration:    dura,
-                    genre:       categ
-                });
-                page.entries++;
-            }
-        };
+                     page.appendItem(PREFIX + ':ard:play:' + docId + ':' + escape(vTitle), 'video', {
+                        station:     vTitle,
+                        title:       vTitle,
+                        description: descr,//.match(//)[1],
+                        icon:        icon,
+                        album_art:   icon,
+                        album:       '',
+                        duration:    dura,
+                        genre:       categ
+                    });
+                    page.entries++;
+                }
+            };
+        }
         page.loading = false;
     });
     
@@ -201,11 +203,12 @@ var XML = require('showtime/xml');
         page.loading = true;
         var vlUrl = 'http://www.ardmediathek.de/play/media/' + docId + '?devicetype=pc&features=flash';
         var doc = showtime.httpReq(vlUrl).toString();
+            doc = doc.match(/"_plugin":1,"_mediaStreamArray":\[([\S\s]*?)_sortierArray/)[1];
         var videoUrl = '';
-        if      (doc.indexOf('_quality":3') > -1) videoUrl = doc.match(/"_quality":3[\S\s]*?"_stream":"([\S\s]*?)"/)[1];
-        else if (doc.indexOf('_quality":2') > -1) videoUrl = doc.match(/"_quality":2[\S\s]*?"_stream":"([\S\s]*?)"/)[1];
-        else if (doc.indexOf('_quality":1') > -1) videoUrl = doc.match(/"_quality":1[\S\s]*?"_stream":"([\S\s]*?)"/)[1];
-        else                                      videoUrl = doc.match(/"_quality":[\S\s]*?"_stream":"([\S\s]*?)"/)[1];
+        if      (doc.indexOf('_quality":3') > -1) videoUrl = doc.match(/"_quality":3[\S\s]*?"_stream":[\S\s]*?"([\S\s]*?)"/)[1];
+        else if (doc.indexOf('_quality":2') > -1) videoUrl = doc.match(/"_quality":2[\S\s]*?"_stream":[\S\s]*?"([\S\s]*?)"/)[1];
+        else if (doc.indexOf('_quality":1') > -1) videoUrl = doc.match(/"_quality":1[\S\s]*?"_stream":[\S\s]*?"([\S\s]*?)"/)[1];
+        else                                      videoUrl = doc.match(/"_quality":[\S\s]*?"_stream":[\S\s]*?"([\S\s]*?)"/)[1];
         
         // No direct video, but stream, so add stream server (not working)
         if (videoUrl.indexOf('http') === -1) videoUrl = doc.match(/"_server":"([\S\s]*?)"/)[1] + '/' + videoUrl ;
@@ -263,8 +266,8 @@ var XML = require('showtime/xml');
 
         for (var i=0; i < item.length; i++) {
             var icon     = item[i].match(/<teaserimage[\S\s]*?key="173x120">([\S\s]*?)<\/teaserimage>/)[1];
-            var title    = item[i].match(/<title>([\S\s]*?)<\/title>/)[1];
-            var sTitle   = item[i].match(/<shortTitle>([\S\s]*?)<\/shortTitle>/)[1];
+            var title    = noHtmlCode(item[i].match(/<title>([\S\s]*?)<\/title>/)[1]);
+            var sTitle   = noHtmlCode(item[i].match(/<shortTitle>([\S\s]*?)<\/shortTitle>/)[1]);
             var descr    = item[i].match(/<detail>([\S\s]*?)<\/detail>/)[1];
             var assetId  = item[i].match(/<assetId>([\S\s]*?)<\/assetId>/)[1];
             var channel  = item[i].match(/<channel>([\S\s]*?)<\/channel>/)[1];
@@ -304,7 +307,7 @@ var XML = require('showtime/xml');
 
         for (var i=0; i < item.length; i++) {
             var icon       = item[i].match(/<teaserimage[\S\s]*?key="173x120">([\S\s]*?)<\/teaserimage>/)[1];
-            var title      = item[i].match(/<title>([\S\s]*?)<\/title>/)[1];
+            var title      = noHtmlCode(item[i].match(/<title>([\S\s]*?)<\/title>/)[1]);
             var descr      = item[i].match(/<detail>([\S\s]*?)<\/detail>/)[1];
             var assetId    = item[i].match(/<assetId>([\S\s]*?)<\/assetId>/)[1];
             if (item[i].match(/<channel>/))
