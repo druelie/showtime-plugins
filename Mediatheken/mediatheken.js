@@ -505,19 +505,19 @@ var XML = require('showtime/xml');
             var arte_vp_url = 'http://arte.tv/papi/tvguide/videos/stream/player/D/' + json.videos[i].em + '_PLUS7-D/ALL/ALL.json';
             var vp = showtime.JSONDecode(showtime.httpReq(arte_vp_url).toString());
 
-         page.appendItem(vp.videoJsonPlayer.VSR.HTTP_MP4_SQ_1.url, 'video', {
-            station:     json.videos[i].title,
-            title:       json.videos[i].title,
-            description: vp.videoJsonPlayer.VDE + '\n\nOnline seit: ' + json.videos[i].airdate_long,
-            icon:        json.videos[i].image_url,
-            album_art:   json.videos[i].image_url,
-            album:       json.videos[i].video_channels,
-            duration:    vp.videoJsonPlayer.VDU,
-            genre:       vp.videoJsonPlayer.genre,
-            views:       vp.videoJsonPlayer.VVI,
-            rating:      vp.videoJsonPlayer.videoRank * 10
-        });
-    };
+            page.appendItem(vp.videoJsonPlayer.VSR.HTTP_MP4_SQ_1.url, 'video', {
+                station:     json.videos[i].title,
+                title:       json.videos[i].title,
+                description: vp.videoJsonPlayer.VDE + '\n\nOnline seit: ' + json.videos[i].airdate_long,
+                icon:        json.videos[i].image_url,
+                album_art:   json.videos[i].image_url,
+                album:       json.videos[i].video_channels,
+                duration:    vp.videoJsonPlayer.VDU,
+                genre:       vp.videoJsonPlayer.genre,
+                views:       vp.videoJsonPlayer.VVI,
+                rating:      vp.videoJsonPlayer.videoRank * 10
+            });
+        };
         page.loading = false;
     });
 

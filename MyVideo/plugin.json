@@ -1,0 +1,14 @@
+{
+	"description": "<p>Schau dir lustige Videos, aktuelle TV Serien, neue Musik Videos und Kino Filme kostenlos, legal und in Top-Qualität auf MyVideo an!<p>Mehr Information auf <a href=\"http://www.myvideo.de\">http://www.myvideo.de</a>",
+	"author": "druelie",
+	"homepage": "https://github.com/druelie/showtime-plugins",
+	"title": "MyVideo",
+	"synopsis": "MyVideo - Lustige Videos, Musik, Serien und kostenlose Filme!",
+	"version": "0.0.1",
+	"file": "MyVideo.js",
+	"showtimeVersion": "4.1.215",
+	"type": "ecmascript",
+	"id": "myvideo",
+	"icon": "MyVideo.png",
+	"category": "video"
+}
