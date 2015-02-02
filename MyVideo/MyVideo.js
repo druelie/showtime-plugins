@@ -59,9 +59,9 @@
     // Start page
     plugin.addURI(PREFIX + ":start", function(page) {
         page.loading = true;
-        setPageHeader(page, TITLE);
+        setPageHeader(page, TITLE + " - Home");
 
-        var URL = "https://papi.myvideo.de/static/myvideo.json";
+        var URL = BASE_URL + "/static/myvideo.json";
         var doc = showtime.httpReq(URL, tabletReqParams).toString();
         var json = showtime.JSONDecode(doc);
         var menu_items = json.menubar.channels[0].menu_items;
@@ -70,12 +70,7 @@
             if (menu_items[i].link_type == "home") {
                 URL = BASE_URL + menu_items[i].link.replace(/platzhalter/, "tablet");
             }
-            else if (menu_items[i].link_type == "BasicPage") {
-                page.appendItem(PREFIX + ":screen:" + escape(menu_items[i].link) + ":" + escape(menu_items[i].displayName), "directory", {
-                    title: menu_items[i].displayName
-                });
-            }
-            else if (menu_items[i].link_type == "FormatGrid") {
+            else if (menu_items[i].link_type) {
                 page.appendItem(PREFIX + ":screen:" + escape(menu_items[i].link) + ":" + escape(menu_items[i].displayName), "directory", {
                     title: menu_items[i].displayName
                 });
@@ -85,11 +80,8 @@
         var json = showtime.JSONDecode(doc);
         var screen_objects = json.screen.screen_objects;
 
-        page.appendItem("", "separator", {title: "Home"});
         for (var i in screen_objects) {
-            if (screen_objects[i].type == "sushi_bar") {
-				page.appendItem("", "separator", {title: screen_objects[i].title});
-            }
+            page.appendItem("", "separator", {title: screen_objects[i].title});
             indexScreenObjects(page, screen_objects[i].screen_objects, "Home");
         }
         page.loading = false;
@@ -109,9 +101,7 @@
             var screen_objects = json.screen.screen_objects;
 
         for (var i in screen_objects) {
-            if (screen_objects[i].type == "sushi_bar" ||
-                screen_objects[i].type == "grid_page" ||
-                screen_objects[i].type == "video_grid_page") {
+            if (screen_objects[i].title) {
 				page.appendItem("", "separator", {title: screen_objects[i].title});
             }
             indexScreenObjects(page, screen_objects[i].screen_objects, unescape(title));
@@ -144,17 +134,38 @@
                 var URI = PREFIX + ":screen:" + escape(screen_objects[j].link) + ":" + escape(vTitle);
             }
 
+//          Extra info only for movies, because it takes too much time
+            if (screen_title == "Filme") {
+                var vInfo = getVideoInfo(screen_objects[j].id);
+                var genre = vInfo.screen.screen_objects[0].category;
+                var descr = vInfo.screen.screen_objects[1].screen_objects[0].description + "\n\n" +
+                            vInfo.screen.screen_objects[1].screen_objects[0].subcaption;
+            }
+            else {
+                var genre = "";
+                var descr = screen_objects[j].publishing_date;
+            }
+            
             var vIcon = screen_objects[j].image_url.replace(/\\/g,'').replace(/\/1948\//,"/420/"); // smaller icons for faster loading
             var vLink = screen_objects[j].link.replace(/\\/g,'');
             page.appendItem(URI, "video", {
                 title: vTitle,
                 icon: vIcon,
                 duration: screen_objects[j].label,
-                description: screen_objects[j].publishing_date
+                description: descr,
+                genre: genre
             });
         }
     }
+
+    function getVideoInfo(vId) {
+        var URL = BASE_URL + "/myvideo-app/v1/tablet/video/" + vId;
+        var doc = showtime.httpReq(URL, tabletReqParams).toString();
+        var json = showtime.JSONDecode(doc);
         
+        return json;
+    }
+    
     // Play videolink
     plugin.addURI(plugin.getDescriptor().id + ":play:(.*):(.*)", function(page, clipid, title) {
         page.loading = true;

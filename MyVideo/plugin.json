@@ -4,7 +4,7 @@
 	"homepage": "https://github.com/druelie/showtime-plugins",
 	"title": "MyVideo",
 	"synopsis": "MyVideo - Lustige Videos, Musik, Serien und kostenlose Filme!",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"file": "MyVideo.js",
 	"showtimeVersion": "4.1.215",
 	"type": "ecmascript",
