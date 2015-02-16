@@ -131,7 +131,7 @@ var XML = require('showtime/xml');
         page.loading = true;
         page.entries = 0;
         var doc = showtime.httpReq(URL).toString();
-            doc = doc.match(/data-ctrl-layoutable([\S\s]*?)modSocialbar/)[1];
+            doc = doc.match(/data-ctrl-layoutable([\S\s]*?)SocialBar/)[1];
         //                                     1-sUrl              2-icon                                          3-numVids                             4-title                      5-desc
         var re = /"media mediaA"[\S\s]*?href="([\S\s]*?)"[\S\s]*?;(\/image\/[\S\s]*?)##width##[\S\s]*?"dachzeile">([\S\s]*?) Ausgabe[\S\s]*?"headline">([\S\s]*?)<[\S\s]*?"subtitle">([\S\s]*?)</g;
         var match = re.exec(doc);
