@@ -92,7 +92,7 @@ var XML = require('showtime/xml');
 
     // make HTML code strings readable
     function noHtmlCode(inString) {
-        return inString.replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&').replace(/&gt;/g,'>').replace(/&lt;/g,'<').replace(/&auml;/g,'ä').replace(/&Auml;/g,'Ä').replace(/&ouml;/g,'ö').replace(/&Ouml;/g,'Ö').replace(/&uuml;/g,'ü').replace(/&Uuml;/g,'Ü'); 
+        return inString.replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&#039;/g,"'").replace(/&amp;/g,'&').replace(/&gt;/g,'>').replace(/&lt;/g,'<').replace(/&auml;/g,'ä').replace(/&Auml;/g,'Ä').replace(/&ouml;/g,'ö').replace(/&Ouml;/g,'Ö').replace(/&uuml;/g,'ü').replace(/&Uuml;/g,'Ü'); 
     }
 
 //===== A R D =================================================================================================================
@@ -136,11 +136,11 @@ var XML = require('showtime/xml');
         var re = /"media mediaA"[\S\s]*?href="([\S\s]*?)"[\S\s]*?;(\/image\/[\S\s]*?)##width##[\S\s]*?"dachzeile">([\S\s]*?) Ausgabe[\S\s]*?"headline">([\S\s]*?)<[\S\s]*?"subtitle">([\S\s]*?)</g;
         var match = re.exec(doc);
         while (match) {
-            var title   = match[4] + ' - ' + match[5];
+            var title   = noHtmlCode(match[4] + ' - ' + match[5]);
             var iconUrl = BASE_URL + match[2] + '256';
-            page.appendItem(PREFIX + ':ard:sendung:' + escape(match[1]) + ':' + escape(match[4]), 'video', {
-                station:     noHtmlCode(title),
-                title:       noHtmlCode(title),
+            page.appendItem(PREFIX + ':ard:sendung:' + escape(match[1]) + ':' + escape(noHtmlCode(match[4])), 'video', {
+                station:     title,
+                title:       title,
                 description: 'Ausgaben: ' + match[3],
                 icon:        iconUrl,
                 album_art:   iconUrl
@@ -169,6 +169,8 @@ var XML = require('showtime/xml');
             for (var i=0; i < item.length; i++) {
                 var docId  = item[i].match(/documentId=([\S\s]*?)&/)[1];
                 var vTitle = item[i].match(/<title>([\S\s]*?)<\/title>/)[1];
+                showtime.print("vTitle: "+vTitle);
+                showtime.print(" title: "+unescape(title));
                     vTitle = noHtmlCode(vTitle.slice(unescape(title).length+3)); // remove overall title
                 var descr  = item[i].match(/<description>([\S\s]*?)<\/description>/)[1];
                     descr  = descr.match(/\/&gt;&lt;\/p&gt;&lt;p&gt;([\S\s]*?) \|/)[1];
@@ -229,6 +231,70 @@ var XML = require('showtime/xml');
             }]
         });
     });
+    
+    plugin.addSearcher(PREFIX + ' - ARD', logo, function(page, query) {
+        indexArdSearch(page, "http://www.ardmediathek.de/tv/suche?source=tv&searchText=" + query.replace(/\s/g, "\+"), query);
+    });
+    
+    function indexArdSearch(page, sUrl, query) {
+        var BASE_URL = 'http://www.ardmediathek.de';
+        page.type = 'directory';
+//        page.metadata.glwview = plugin.path + 'views/array.view';
+        page.contents = 'items';
+        page.metadata.logo = logo;
+        page.metadata.title = 'ARD Mediathek - Suche: ' + query;
+        page.entries = 0;
+        var tryToSearch = true;
+
+        function searchAndAppendVideos(doc) {
+            doc = doc.match(/Sortiert nach Datum([\S\s]*?)&gt;/)[1];
+            //                    1-docId                  2-icon                                         3-Title                       4-sub                 5-desc
+            var re = /documentId=([\S\s]*?)\&amp;[\S\s]*?;(\/image\/[\S\s]*?)##width##[\S\s]*?"headline">([\S\s]*?)<[\S\s]*?"subtitle">([\S\s]*?)<[\S\s]*?"teasertext">([\S\s]*?)</g;
+            var match = re.exec(doc);
+            while (match) {
+                var title   = noHtmlCode(match[3]);
+                var iconUrl = BASE_URL + match[2] + '256';
+                var subTitle= match[4];
+                var descr   = noHtmlCode(match[5]) + '\n\n' + subTitle;
+                var dura    = subTitle.match(/\| ([\S\s]*?) \|/)[1];
+                var genre   = subTitle.match(/\| ([\S\s]*?) \| ([\S\s]*.)/)[2];
+                 page.appendItem(PREFIX + ':ard:play:' + match[1] + ':' + escape(title), 'video', {
+                    station:     title,
+                    title:       title,
+                    description: descr,
+                    icon:        iconUrl,
+                    album_art:   iconUrl,
+                    album:       '',
+                    duration:    dura,
+                    genre:       genre
+                });
+                page.entries++;
+                match = re.exec(doc);
+            };
+        }
+        
+        var firstTime = true;
+        function loader() {
+            if (!tryToSearch) return false;
+            page.loading = true;
+            var doc = showtime.httpReq(sUrl).toString();
+            if ( firstTime ) {
+                page.metadata.title = page.metadata.title + ' (' + doc.match(/ergab <strong>([\S\s]*? Treffer)</)[1] + ')';
+                firstTime = false;
+            }
+
+            searchAndAppendVideos(doc);
+            page.loading = false;
+
+            var next = doc.match(/>Zur nächsten Seite<([\S\s]*?)href="([\S\s]*?)"/);
+            if (!next) return tryToSearch = false;
+            sUrl = BASE_URL + next[2].replace(/&amp;/g,'&');
+            return true;
+        }
+        
+        loader();
+        page.paginator = loader;
+    }
 
 //===== Z D F =================================================================================================================
 
