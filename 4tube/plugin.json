@@ -4,10 +4,10 @@
 	"homepage": "https://github.com/druelie/showtime-plugins",
 	"title": "4tube",
 	"synopsis": "Free Porn Videos | 4tube",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"file": "4tube.js",
 	"showtimeVersion": "4.1.215",
-	"type": "javascript",
+	"type": "ecmascript",
 	"id": "4tube",
 	"icon": "4tube.png",
 	"category": "video"

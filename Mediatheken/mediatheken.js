@@ -695,8 +695,6 @@ var XML = require('showtime/xml');
         if ( title == "Weltbilder" ) page.metadata.background = 'http://www.ndr.de/fernsehen/sendungen/weltbilder/weltbilderlogo100_v-contentxl.jpg';
         if ( title == "X:enius" ) page.metadata.background = 'http://www.arte.tv/papi/tvguide/images/Xenius_Logo/W940H530/Xenius_Logo.jpg';
         if ( title == "ZAPP" ) page.metadata.background = 'http://www.ndr.de/fernsehen/sendungen/zapp/logo210_v-contentgross.jpg';
-        if ( title == "Sturm der Liebe" ) page.metadata.background = 'http://www.ndr.de/fernsehen/sturmderliebe100_v-contentxl.jpg';
-        if ( title == "Sturm der Liebe" ) page.metadata.background = 'http://www.ndr.de/fernsehen/sturmderliebe100_v-contentxl.jpg';
         page.metadata.backgroundAlpha = 0.2;
 
         indexNdrVideos(page, URL, 'Sendung: ' + title);

@@ -220,7 +220,7 @@
         var matchInfo = re.exec(doc);
         var mediaID  = matchInfo[1];
         var playQual = matchInfo[2];
-        if (playQual > eval(settings.maxVideoRes)) playQual = settings.maxVideoRes
+        if (playQual > eval(service.maxVideoRes)) playQual = service.maxVideoRes
         var tempUrl  = "http://tkn.4tube.com/" + mediaID + "/desktop/" + playQual;
         var doc = showtime.httpReq(tempUrl, {
             debug: false,
