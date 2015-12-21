@@ -216,10 +216,10 @@
         page.loading = true;
         var doc = showtime.httpReq(checkLink(url)).toString();
         // example: (800375623, 360, [1080,720,480,360,240])
-        var re = /\((\d+), \d+, \[(\d+),/;
+        var re = /button data-id="(\d+)"/;
         var matchInfo = re.exec(doc);
         var mediaID  = matchInfo[1];
-        var playQual = matchInfo[2];
+        var playQual = service.maxVideoRes;//matchInfo[2];
         if (playQual > eval(service.maxVideoRes)) playQual = service.maxVideoRes
         var tempUrl  = "http://tkn.4tube.com/" + mediaID + "/desktop/" + playQual;
         var doc = showtime.httpReq(tempUrl, {
@@ -475,23 +475,23 @@
            if (service.duration != "") url += "&duration=" + service.duration;
            if (service.time     != "") url += "&time="     + service.time;
            if (service.quality  != "") url += "&quality="  + service.quality;
-	   }
+        }
 
         page.loading = true;
         page.entries = 0;
         var tryToSearch = true;
 
         function scraper(doc) {
-            //                                        1-link                      2-title                               3-icon      4-HD ?                           5-length                                          6-views                          7-uploaded
-            var re = />Watch Later<\/button><a href="([\S\s]*?)" [\S\s]*? title="([\S\s]*?)" [\S\s]*?<img data-master="([\S\s]*?)" ([\S\s]*?)"icon icon-timer"><\/i>([\S\s]*?)<\/li><li><i class="icon icon-eye"><\/i>([\S\s]*?)<[\S\s]*?icon-up"><\/i>([\S\s]*?)</g;
+            //                                        1-link                      2-title                               3-icon      4-HD ?                   5-length
+            var re = />Watch Later<\/button><a href="([\S\s]*?)" [\S\s]*? title="([\S\s]*?)" [\S\s]*?<img data-master="([\S\s]*?)" ([\S\s]*?)"duration-top">([\S\s]*?)</g;
             var match = re.exec(doc);
 			while (match) {
 				var hdString = "";
-				if (match[4].match(/<li>HD<\/li>/)) hdString = "[HD]";
+				if (match[4].match(/>HD<\/li>/)) hdString = "[HD]";
 				page.appendItem(plugin.getDescriptor().id + ":play:" + escape(match[1]) + ":" + escape(match[2]), "video", {
 					title: new showtime.RichText(coloredStr(hdString, orange) + match[2] + colorStr(match[5], orange)),
 					icon: match[3],
-					description: new showtime.RichText(coloredStr("Views: ", orange) + match[6] + " - " + coloredStr("Uploaded: ", orange) + match[7]),
+//					description: new showtime.RichText(coloredStr("Views: ", orange) + match[6] + " - " + coloredStr("Uploaded: ", orange) + match[7]),
 					genre: "Adult",
 					duration: match[5]
 					// rating: match[6] * 10
